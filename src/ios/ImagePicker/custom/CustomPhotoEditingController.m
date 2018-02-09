@@ -38,7 +38,7 @@
     self = [super init];
     if (self) {
         self.isHiddenNavBar = YES;
-        self.isHiddenStatusBar = NO;
+        self.isHiddenStatusBar = YES;
         
         self.cutType = 3;
         self.aspectWHRatio = 0;

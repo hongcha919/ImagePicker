@@ -94,7 +94,7 @@
     self.gridView = gridView;
     
     self.clippingMinSize = CGSizeMake(80, 80);
-    self.clippingMaxRect = CGRectInset(self.frame , 1, 0);
+    self.clippingMaxRect = CGRectInset(self.frame , 20, 65);
     
     /** 创建显示图片像素控件 */
     UILabel *imagePixel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.width-40, 30)];
@@ -189,7 +189,7 @@
         /** 动画切换 */
         if (animated) {
             [UIView animateWithDuration:0.25f animations:^{
-                CGRect rect = CGRectInset(self.frame , 1, 0);
+                CGRect rect = CGRectInset(self.frame , 20, 65);
                 self.clippingRect = AVMakeRectWithAspectRatioInsideRect(self.clippingView.size, rect);
             } completion:^(BOOL finished) {
                 [UIView animateWithDuration:0.25f animations:^{
@@ -201,7 +201,7 @@
                 }];
             }];
         } else {
-            CGRect rect = CGRectInset(self.frame , 1, 0);
+            CGRect rect = CGRectInset(self.frame , 20, 65);
             self.clippingRect = AVMakeRectWithAspectRatioInsideRect(self.clippingView.size, rect);
             self.gridView.alpha = 1.f;
             self.imagePixel.alpha = 1.f;

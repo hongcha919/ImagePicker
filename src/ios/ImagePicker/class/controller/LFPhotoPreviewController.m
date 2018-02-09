@@ -85,7 +85,7 @@ CGFloat const previewBarDefaultHeight = 64.f;
     self = [super init];
     if (self) {
         self.isHiddenNavBar = YES;
-        self.isHiddenStatusBar = NO;
+        self.isHiddenStatusBar = YES;
     }
     return self;
 }
