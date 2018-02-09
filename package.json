@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "name": "cordova-plugin-haoqi-imagepicker",
+  "cordova_name": "ImagePicker",
+  "description": "This plugin allows selection of multiple images from the camera roll / gallery in a phonegap app",
+  "license": "MIT",
+  "repo": "https://github.com/hongcha919/ImagePicker",
+  "issue": "",
+  "keywords": [],
+  "platforms": [
+    "android",
+    "ios"
+  ],
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=3.5.0"
+    }
+  ]
+}

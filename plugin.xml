@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  id="com.haoqi.imagepicker"
+  version="1.0.0">
+
+    <name>ImagePicker</name>
+
+    <description>
+        This plugin allows selection of multiple images from the camera roll / gallery in a phonegap app
+    </description>
+
+    <license>MIT</license>
+
+    <engines>
+        <engine name="cordova" version=">=3.5.0" />
+    </engines>
+
+    <js-module src="www/imagepicker.js" name="ImagePicker">
+        <clobbers target="plugins.imagePicker" />
+    </js-module>
+
+    <!-- ios -->
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="ImagePicker">
+                <param name="ios-package" value="SOSPicker"/>
+            </feature>
+        </config-file>
+        
+        <preference name="PHOTO_LIBRARY_USAGE_DESCRIPTION" default=" " />
+        <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
+          <string>$PHOTO_LIBRARY_USAGE_DESCRIPTION</string>
+        </config-file>
+
+        <header-file src="src/ios/SOSPicker.h" />
+        <source-file src="src/ios/SOSPicker.m" />
+
+        <header-file src="src/ios/ImagePicker/vendors/LFToGIF/LFToGIF.h" />
+        <source-file src="src/ios/ImagePicker/vendors/LFToGIF/LFToGIF.m" />
+        <header-file src="src/ios/ImagePicker/vendors/LFGifPlayer/LFWeakProxy.h" />
+        <source-file src="src/ios/ImagePicker/vendors/LFGifPlayer/LFWeakProxy.m" />
+        <header-file src="src/ios/ImagePicker/vendors/LFGifPlayer/LFGifPlayerManager.h" />
+        <source-file src="src/ios/ImagePicker/vendors/LFGifPlayer/LFGifPlayerManager.m" />
+        <header-file src="src/ios/ImagePicker/class/define/LFImagePickerHeader.h" />
+        <source-file src="src/ios/ImagePicker/class/define/LFImagePickerHeader.m" />
+        <header-file src="src/ios/ImagePicker/class/define/LFImagePickerPublicHeader.h" />
+        <header-file src="src/ios/ImagePicker/class/define/LFResultObject_property.h" />
+        <header-file src="src/ios/ImagePicker/class/LFImagePickerController.h" />
+        <source-file src="src/ios/ImagePicker/class/LFImagePickerController.m" />
+        <header-file src="src/ios/ImagePicker/class/utils/GIFUtils/LFGIFImageSerialization.h" />
+        <source-file src="src/ios/ImagePicker/class/utils/GIFUtils/LFGIFImageSerialization.m" />
+        <header-file src="src/ios/ImagePicker/class/utils/VideoUtils/LF_VideoUtils.h" />
+        <source-file src="src/ios/ImagePicker/class/utils/VideoUtils/LF_VideoUtils.m" />
+        <header-file src="src/ios/ImagePicker/class/utils/Category/UIImage+LFCommon.h" />
+        <source-file src="src/ios/ImagePicker/class/utils/Category/UIImage+LFCommon.m" />
+        <header-file src="src/ios/ImagePicker/class/utils/Category/UIAlertView+LF_Block.h" />
+        <source-file src="src/ios/ImagePicker/class/utils/Category/UIAlertView+LF_Block.m" />
+        <header-file src="src/ios/ImagePicker/class/utils/Category/UIImage+LF_ImageCompress.h" />
+        <source-file src="src/ios/ImagePicker/class/utils/Category/UIImage+LF_ImageCompress.m" />
+        <header-file src="src/ios/ImagePicker/class/utils/Category/UIImage+LF_Format.h" />
+        <source-file src="src/ios/ImagePicker/class/utils/Category/UIImage+LF_Format.m" />
+        <header-file src="src/ios/ImagePicker/class/utils/Category/UIView+LFFrame.h" />
+        <source-file src="src/ios/ImagePicker/class/utils/Category/UIView+LFFrame.m" />
+        <header-file src="src/ios/ImagePicker/class/utils/Category/UIView+LFAnimate.h" />
+        <source-file src="src/ios/ImagePicker/class/utils/Category/UIView+LFAnimate.m" />
+        <header-file src="src/ios/ImagePicker/class/utils/FileUtils/LF_FileUtility.h" />
+        <source-file src="src/ios/ImagePicker/class/utils/FileUtils/LF_FileUtility.m" />
+        <header-file src="src/ios/ImagePicker/class/utils/CancelBlock/LFCancelBlock.h" />
+        <header-file src="src/ios/ImagePicker/class/controller/LFPhotoPickerController.h" />
+        <source-file src="src/ios/ImagePicker/class/controller/LFPhotoPickerController.m" />
+        <header-file src="src/ios/ImagePicker/class/controller/LFPhotoPreviewController.h" />
+        <source-file src="src/ios/ImagePicker/class/controller/LFPhotoPreviewController.m" />
+        <header-file src="src/ios/ImagePicker/class/controller/LFAlbumPickerController.h" />
+        <source-file src="src/ios/ImagePicker/class/controller/LFAlbumPickerController.m" />
+        <header-file src="src/ios/ImagePicker/class/controller/LFBaseViewController.h" />
+        <source-file src="src/ios/ImagePicker/class/controller/LFBaseViewController.m" />
+        <header-file src="src/ios/ImagePicker/class/cell/LFPhotoPreviewLivePhotoCell.h" />
+        <source-file src="src/ios/ImagePicker/class/cell/LFPhotoPreviewLivePhotoCell.m" />
+        <header-file src="src/ios/ImagePicker/class/cell/LFPhotoPreviewVideoCell.h" />
+        <source-file src="src/ios/ImagePicker/class/cell/LFPhotoPreviewVideoCell.m" />
+        <header-file src="src/ios/ImagePicker/class/cell/LFAssetCell.h" />
+        <source-file src="src/ios/ImagePicker/class/cell/LFAssetCell.m" />
+        <header-file src="src/ios/ImagePicker/class/cell/LFPhotoPreviewGifCell.h" />
+        <source-file src="src/ios/ImagePicker/class/cell/LFPhotoPreviewGifCell.m" />
+        <header-file src="src/ios/ImagePicker/class/cell/LFPhotoPreviewCell.h" />
+        <source-file src="src/ios/ImagePicker/class/cell/LFPhotoPreviewCell.m" />
+        <header-file src="src/ios/ImagePicker/class/cell/LFAlbumCell.h" />
+        <source-file src="src/ios/ImagePicker/class/cell/LFAlbumCell.m" />
+        <header-file src="src/ios/ImagePicker/class/cell/LFPhotoPreviewCell_property.h" />
+        <header-file src="src/ios/ImagePicker/class/manager/LFAssetManager+SaveAlbum.h" />
+        <source-file src="src/ios/ImagePicker/class/manager/LFAssetManager+SaveAlbum.m" />
+        <header-file src="src/ios/ImagePicker/class/manager/LFAssetManager.h" />
+        <source-file src="src/ios/ImagePicker/class/manager/LFAssetManager.m" />
+        <header-file src="src/ios/ImagePicker/class/manager/LFPhotoEditManager.h" />
+        <source-file src="src/ios/ImagePicker/class/manager/LFPhotoEditManager.m" />
+        <header-file src="src/ios/ImagePicker/class/manager/LFAssetManager+CreateMedia.h" />
+        <source-file src="src/ios/ImagePicker/class/manager/LFAssetManager+CreateMedia.m" />
+        <header-file src="src/ios/ImagePicker/class/manager/LFVideoEditManager.h" />
+        <source-file src="src/ios/ImagePicker/class/manager/LFVideoEditManager.m" />
+        <header-file src="src/ios/ImagePicker/class/manager/LFAssetManager+Authorization.h" />
+        <source-file src="src/ios/ImagePicker/class/manager/LFAssetManager+Authorization.m" />
+        <resource-file src="src/ios/ImagePicker/class/LFImagePickerController.bundle" />
+        <header-file src="src/ios/ImagePicker/class/LFLayoutPickerController.h" />
+        <source-file src="src/ios/ImagePicker/class/LFLayoutPickerController.m" />
+        <header-file src="src/ios/ImagePicker/class/model/result/LFResultVideo.h" />
+        <source-file src="src/ios/ImagePicker/class/model/result/LFResultVideo.m" />
+        <header-file src="src/ios/ImagePicker/class/model/result/LFResultInfo.h" />
+        <source-file src="src/ios/ImagePicker/class/model/result/LFResultInfo.m" />
+        <header-file src="src/ios/ImagePicker/class/model/result/LFResultObject.h" />
+        <source-file src="src/ios/ImagePicker/class/model/result/LFResultObject.m" />
+        <header-file src="src/ios/ImagePicker/class/model/result/LFResultImage.h" />
+        <source-file src="src/ios/ImagePicker/class/model/result/LFResultImage.m" />
+        <header-file src="src/ios/ImagePicker/class/model/LFAsset.h" />
+        <source-file src="src/ios/ImagePicker/class/model/LFAsset.m" />
+        <header-file src="src/ios/ImagePicker/class/model/LFAlbum.h" />
+        <source-file src="src/ios/ImagePicker/class/model/LFAlbum.m" />
+        <header-file src="src/ios/ImagePicker/class/view/previewBar/LFPreviewBar.h" />
+        <source-file src="src/ios/ImagePicker/class/view/previewBar/LFPreviewBar.m" />
+        <header-file src="src/ios/ImagePicker/class/view/previewBar/subView/LFPreviewBarCell.h" />
+        <source-file src="src/ios/ImagePicker/class/view/previewBar/subView/LFPreviewBarCell.m" />
+        <header-file src="src/ios/ImagePicker/custom/CustomPhotoEditingController.h" />
+        <source-file src="src/ios/ImagePicker/custom/CustomPhotoEditingController.m" />
+        <header-file src="src/ios/ImagePicker/custom/CustomEditingView.h" />
+        <source-file src="src/ios/ImagePicker/custom/CustomEditingView.m" />
+        <header-file src="src/ios/ImagePicker/custom/CustomCancelBlock.h" />
+        <header-file src="src/ios/ImagePicker/custom/CustomClipToolbar.h" />
+        <source-file src="src/ios/ImagePicker/custom/CustomClipToolbar.m" />
+        <header-file src="src/ios/ImagePicker/custom/CustomClippingView.h" />
+        <source-file src="src/ios/ImagePicker/custom/CustomClippingView.m" />
+        <header-file src="src/ios/ImagePicker/custom/CustomGridView.h" />
+        <source-file src="src/ios/ImagePicker/custom/CustomGridView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/vendors/JRPickColorView/JRPickColorView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/vendors/JRPickColorView/JRPickColorView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/common/define/LFPhotoEditDelegate.h" />
+        <header-file src="src/ios/LFMediaEditingController/class/common/define/LFMediaEditingType.h" />
+        <header-file src="src/ios/LFMediaEditingController/class/common/define/LFMediaEditingHeader.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/common/define/LFMediaEditingHeader.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/common/define/LFEditingProtocol.h" />
+        <resource-file src="src/ios/LFMediaEditingController/class/common/LFMediaEditingController.bundle" />
+        <header-file src="src/ios/LFMediaEditingController/class/common/category/UIView+LFMEFrame.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/common/category/UIView+LFMEFrame.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/common/category/UIImage+LFMECommon.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/common/category/UIImage+LFMECommon.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/common/category/NSString+LFMECoreText.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/common/category/NSString+LFMECoreText.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/common/category/UIDevice+LFMEOrientation.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/common/category/UIDevice+LFMEOrientation.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/common/category/UIView+LFMECommon.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/common/category/UIView+LFMECommon.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/common/view/LFScrollView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/common/view/LFScrollView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFBaseEditingController.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFBaseEditingController.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/utils/LFVideoPlayer.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/utils/LFVideoPlayer.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/utils/LFVideoExportSession.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/utils/LFVideoExportSession.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/controller/LFVideoEditingController.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/controller/LFVideoEditingController.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/model/LFVideoEdit.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/model/LFVideoEdit.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/LFVideoClippingView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/LFVideoClippingView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/toolBar/LFAudioTrackBar.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/toolBar/LFAudioTrackBar.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/toolBar/LFVideoClipToolbar.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/toolBar/LFVideoClipToolbar.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/subview/LFVideoTrimmerGridLayer.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/subview/LFVideoTrimmerGridLayer.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/subview/LFVideoTrimmerView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/subview/LFVideoTrimmerView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/subview/LFVideoTrimmerGridView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/subview/LFVideoTrimmerGridView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/LFVideoEditingView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/LFVideoEditingView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/LFVideoPlayerLayerView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFVideoEditingController/view/LFVideoPlayerLayerView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/utils/CancelBlock/LFMECancelBlock.h" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/controller/LFPhotoEditingController.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/controller/LFPhotoEditingController.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/model/LFPhotoEdit.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/model/LFPhotoEdit.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/LFZoomingView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/LFZoomingView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/splash/LFSplashLayer.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/splash/LFSplashLayer.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/splash/LFMaskLayer.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/splash/LFMaskLayer.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/clipping/LFGridView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/clipping/LFGridView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/clipping/LFGridLayer.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/clipping/LFGridLayer.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/clipping/LFGridMaskLayer.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/clipping/LFGridMaskLayer.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/clipping/LFResizeControl.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/clipping/LFResizeControl.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/sticker/LFStickerLabel.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/sticker/LFStickerLabel.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/sticker/LFMovingView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/other/sticker/LFMovingView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFEditToolbar.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFEditToolbar.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFEditCollectionView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFEditCollectionView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFTextBar.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFTextBar.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFStickerBar.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFStickerBar.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFClipToolbar.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFClipToolbar.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFColorSlider.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/toolBar/LFColorSlider.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/LFEditingView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/LFEditingView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/model/LFText.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/model/LFText.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/LFClippingView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/LFClippingView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/subView/LFDrawView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/subView/LFDrawView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/subView/LFSplashView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/subView/LFSplashView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/subView/LFStickerView.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/subView/LFStickerView.m" />
+        <header-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/subView/LFSplashView_new.h" />
+        <source-file src="src/ios/LFMediaEditingController/class/LFPhotoEditingController/view/subView/LFSplashView_new.m" />
+        
+        <framework src="Accelerate.framework" />
+        <framework src="Security.framework" />
+        <framework src="Photos.framework" />
+        <framework src="SystemConfiguration.framework" />
+        <framework src="QuartzCore.framework" />
+
+    </platform>
+
+    <!-- android -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="ImagePicker">
+                <param name="android-package" value="com.synconset.ImagePicker"/>
+            </feature>
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <activity android:label="@string/multi_app_name" android:name="com.synconset.MultiImageChooserActivity" android:theme="@style/Theme.AppCompat.Light">
+            </activity>
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        </config-file>
+
+        <framework src="com.android.support:appcompat-v7:23+" />
+
+        <source-file src="src/android/com/synconset/ImagePicker/ImagePicker.java" target-dir="src/com/synconset" />
+        <source-file src="src/android/com/synconset/ImagePicker/FakeR.java" target-dir="src/com/synconset" />
+
+        <source-file src="src/android/Library/src/ImageFetcher.java" target-dir="src/com/synconset"/>
+        <source-file src="src/android/Library/src/MultiImageChooserActivity.java" target-dir="src/com/synconset"/>
+
+        <source-file src="src/android/Library/res/anim/image_pop_in.xml" target-dir="res/anim"/>
+        <source-file src="src/android/Library/res/drawable/grid_background.xml" target-dir="res/drawable"/>
+        <source-file src="src/android/Library/res/drawable-hdpi/image_bg.9.png" target-dir="res/drawable-hdpi"/>
+        <source-file src="src/android/Library/res/drawable-hdpi/loading_icon.png" target-dir="res/drawable-hdpi"/>
+        <source-file src="src/android/Library/res/drawable-mdpi/ic_action_discard_dark.png" target-dir="res/drawable-mdpi"/>
+        <source-file src="src/android/Library/res/drawable-mdpi/ic_action_discard_light.png" target-dir="res/drawable-mdpi"/>
+        <source-file src="src/android/Library/res/drawable-mdpi/ic_action_done_dark.png" target-dir="res/drawable-mdpi"/>
+        <source-file src="src/android/Library/res/drawable-mdpi/ic_action_done_light.png" target-dir="res/drawable-mdpi"/>
+        <source-file src="src/android/Library/res/drawable-mdpi/ic_launcher.png" target-dir="res/drawable-mdpi"/>
+        <source-file src="src/android/Library/res/drawable-xhdpi/ic_action_discard_dark.png" target-dir="res/drawable-xhdpi"/>
+        <source-file src="src/android/Library/res/drawable-xhdpi/ic_action_discard_light.png" target-dir="res/drawable-xhdpi"/>
+        <source-file src="src/android/Library/res/drawable-xhdpi/ic_action_done_dark.png" target-dir="res/drawable-xhdpi"/>
+        <source-file src="src/android/Library/res/drawable-xhdpi/ic_action_done_light.png" target-dir="res/drawable-xhdpi"/>
+        <source-file src="src/android/Library/res/drawable-xhdpi/ic_launcher.png" target-dir="res/drawable-xhdpi"/>
+        <source-file src="src/android/Library/res/layout/actionbar_custom_view_done_discard.xml" target-dir="res/layout"/>
+        <source-file src="src/android/Library/res/layout/actionbar_discard_button.xml" target-dir="res/layout"/>
+        <source-file src="src/android/Library/res/layout/actionbar_done_button.xml" target-dir="res/layout"/>
+        <source-file src="src/android/Library/res/layout/multiselectorgrid.xml" target-dir="res/layout"/>
+        <source-file src="src/android/Library/res/values/multiimagechooser_strings_en.xml" target-dir="res/values"/>
+        <source-file src="src/android/Library/res/values/themes.xml" target-dir="res/values"/>
+
+        <source-file src="src/android/Library/res/values-de/multiimagechooser_strings_de.xml" target-dir="res/values-de"/>
+        <source-file src="src/android/Library/res/values-es/multiimagechooser_strings_es.xml" target-dir="res/values-es"/>
+        <source-file src="src/android/Library/res/values-fr/multiimagechooser_strings_fr.xml" target-dir="res/values-fr"/>
+        <source-file src="src/android/Library/res/values-hu/multiimagechooser_strings_hu.xml" target-dir="res/values-hu"/>
+        <source-file src="src/android/Library/res/values-ja/multiimagechooser_strings_ja.xml" target-dir="res/values-ja"/>
+        <source-file src="src/android/Library/res/values-ko/multiimagechooser_strings_ko.xml" target-dir="res/values-ko"/>
+
+        <framework src="src/android/ignorelinterrors.gradle" custom="true" type="gradleReference"/>
+        <framework src="src/android/androidtarget.gradle" custom="true" type="gradleReference"/>
+    </platform>
+</plugin>
