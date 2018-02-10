@@ -294,11 +294,12 @@ typedef enum : NSUInteger {
     NSString* filePath;
     CDVPluginResult* result = nil;
     
+    NSInteger j = 0;
     for (NSInteger i = 0; i < results.count; i++) {
         LFResultObject *result = results[i];
         if ([result isKindOfClass:[LFResultImage class]]) {
             do {
-                filePath = [NSString stringWithFormat:@"%@/%@%03d.%@", docsPath, CDV_PHOTO_PREFIX, i++, @"jpg"];
+                filePath = [NSString stringWithFormat:@"%@/%@%03d.%@", docsPath, CDV_PHOTO_PREFIX, j++, @"jpg"];
             } while ([fileMgr fileExistsAtPath:filePath]);
             
             LFResultImage *resultImage = (LFResultImage *)result;

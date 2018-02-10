@@ -11,16 +11,71 @@
 <div class="app">
   <h1>ImagePicker demo</h1>
 
-  <div id="deviceready" class="blink">
-    <p class="event listening">Connecting to Device</p>
+<!--  <div id="deviceready" class="blink">-->
+<!--    <p class="event listening">Connecting to Device</p>-->
+<!---->
+<!--    <p class="event received">Device is Ready</p>-->
+    <button onclick="getPics0()">get pics cuttype=0</button>
+    <button onclick="getPics1()">get pics cuttype=1</button>
+    <button onclick="getPics()">get pics cuttype=2</button>
 
-    <p class="event received">Device is Ready</p>
-    <button onclick="getPics()">get pics</button>
-  </div>
+<!--  </div>-->
 </div>
 <script type="text/javascript" src="cordova.js"></script>
 <script type="text/javascript" src="js/index.js"></script>
 <script>
+    
+    function getPics0() {
+        imagePicker.getPictures(
+                                function (result) {
+                                var content = '';
+                                for (var i = 0; i < result.length; i++) {
+                                content += '<img src="' + result[i] + '" style="max-width:200px"/>';
+                                //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                                }
+                                document.getElementById("imageOutput").innerHTML = content;
+                                }, function (error) {
+                                alert('Error: ' + error);
+                                }, {
+                                // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                                maximumImagesCount: 1,
+                                width: 400,
+                                height: 500,
+                                // outputType: imagePicker.OutputType.BASE64_STRING
+                                
+                                cutType: 0,
+                                cutWidth: 1,
+                                cutHeigth: 1,
+                                }
+                                );
+    }
+
+
+function getPics1() {
+    imagePicker.getPictures(
+                            function (result) {
+                            var content = '';
+                            for (var i = 0; i < result.length; i++) {
+                            content += '<img src="' + result[i] + '" style="max-width:200px"/>';
+                            //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                            }
+                            document.getElementById("imageOutput").innerHTML = content;
+                            }, function (error) {
+                            alert('Error: ' + error);
+                            }, {
+                            // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                            maximumImagesCount: 1,
+                            width: 400,
+                            height: 500,
+                            // outputType: imagePicker.OutputType.BASE64_STRING
+                            
+                            cutType: 1,
+                            cutWidth: 1,
+                            cutHeigth: 1,
+                            }
+                            );
+}
+
   function getPics() {
     imagePicker.getPictures(
         function (result) {
@@ -36,26 +91,12 @@
           // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
           maximumImagesCount: 10,         
           width: 400,
-          height: 500
+          height: 500,
           // outputType: imagePicker.OutputType.BASE64_STRING
           
           cutType: 2,
           // cutWidth: 0,
           // cutHeigth: 0,
-
-          // oKButtonTitleColorNormal: "#1aad19",
-          // oKButtonTitleColorDisabled: "#175216",
-          // naviBgColor: "#222222e6",
-          // naviTitleColor: "#ffffff",
-          // barItemTextColor: "#ffffff",
-          // previewNaviBgColor: "#222222e6",
-          // toolbarBgColor: "#1a1a1ae6",
-          // toolbarTitleColorNormal: "#ffffff",
-          // toolbarTitleColorDisabled: "#5c666a",
-          // editNaviBgColor: "#222222e6",
-          // editOKButtonTitleColorNormal: "#1aad19",
-          // editCancelButtonTitleColorNormal: "#cccccc",
-          // editToolbarBgColor: "#1a1a1ae6",
         }
     );
   }
