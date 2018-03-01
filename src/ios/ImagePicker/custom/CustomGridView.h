@@ -15,6 +15,8 @@
 - (void)setGridRect:(CGRect)gridRect animated:(BOOL)animated;
 - (void)setGridRect:(CGRect)gridRect maskLayer:(BOOL)isMaskLayer animated:(BOOL)animated;
 - (CGRect)getResetRect:(CGRect)frame;
+- (BOOL)gridRectChange;
+- (void)setAspectWHRatio:(float)aspectWHRatio rect:(CGRect)rect;
 
 /** 最小尺寸 CGSizeMake(80, 80); */
 @property (nonatomic, assign) CGSize controlMinSize;

@@ -12,6 +12,7 @@
 @interface LFZoomingView : UIView <LFEditingProtocol>
 
 @property (nonatomic, strong) UIImage *image;
+@property (nonatomic, weak) UIImageView *imageView;
 
 /** 贴图是否需要移到屏幕中心 */
 @property (nonatomic, copy) BOOL(^moveCenter)(CGRect rect);

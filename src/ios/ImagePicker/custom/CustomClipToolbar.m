@@ -18,9 +18,6 @@
 
 @property (nonatomic, strong) UIColor *oKButtonTitleColorNormal;
 
-/** 重置按钮 */
-@property (nonatomic, weak) UIButton *resetButton;
-
 @end
 
 @implementation CustomClipToolbar
@@ -53,13 +50,17 @@
   
     /** 还原 */
     UIButton *resetButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    
     resetButton.frame = (CGRect){{margin,0}, size};
-    [resetButton setImage:self.resetImage forState:UIControlStateNormal];
-    [resetButton setImage:self.resetImage_HL forState:UIControlStateHighlighted];
-    [resetButton setImage:self.resetImage_HL forState:UIControlStateSelected];
+//    [resetButton setImage:self.resetImage forState:UIControlStateNormal];
+//    [resetButton setImage:self.resetImage_HL forState:UIControlStateHighlighted];
+//    [resetButton setImage:self.resetImage_HL forState:UIControlStateSelected];
+    resetButton.titleLabel.font = [UIFont systemFontOfSize:14];
+    [resetButton setTitle:@"还原" forState:UIControlStateNormal];
     [resetButton addTarget:self action:@selector(clippingReset:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:resetButton];
     self.resetButton = resetButton;
+    [resetButton setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
 
     /** 新增旋转 */
     UIButton *rotateButton = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -77,6 +78,10 @@
     self.resetButton.enabled = enableReset;
 }
 
+- (void)hiddenResetButton:(BOOL)hidden
+{
+    self.resetButton.hidden = hidden;
+}
 //- (void)setSelectAspectRatio:(BOOL)selectAspectRatio
 //{
 //    _selectAspectRatio = selectAspectRatio;

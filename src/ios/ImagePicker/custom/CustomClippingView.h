@@ -34,6 +34,9 @@
 /** 剪切范围 */
 @property (nonatomic, assign) CGRect cropRect;
 
+@property (nonatomic, assign) float customMinZoomScale;
+@property (nonatomic, assign) NSInteger cutType;//0 圆形；1矩形
+
 /** 缩小到指定坐标 */
 - (void)zoomOutToRect:(CGRect)toRect;
 /** 放大到指定坐标(必须大于当前坐标) */
@@ -44,6 +47,9 @@
 - (void)reset;
 /** 取消 */
 - (void)cancel;
+/* 设置初始缩放比例*/
+- (void)setInitZoomScale:(CGFloat)scale;
+- (NSDictionary *)getPhotoEditData:(BOOL)always;
 
 @end
 

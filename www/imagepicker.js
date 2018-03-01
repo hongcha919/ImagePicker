@@ -55,6 +55,7 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 
 	var params = {
 		maximumImagesCount: options.maximumImagesCount ? options.maximumImagesCount : 15,
+		customMinZoomScale: options.customMinZoomScale ? options.customMinZoomScale : 1.0,
 		width: options.width ? options.width : 0,
 		height: options.height ? options.height : 0,
 		quality: options.quality ? options.quality : 100,
@@ -78,6 +79,8 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 		editOKButtonTitleColorNormal: options.editOKButtonTitleColorNormal ? options.editOKButtonTitleColorNormal : "#1aad19",
 		editCancelButtonTitleColorNormal: options.editCancelButtonTitleColorNormal ? options.editCancelButtonTitleColorNormal : "#cccccc",
 		editToolbarBgColor: options.editToolbarBgColor ? options.editToolbarBgColor : "#1a1a1ae6",
+		editToolbarTitleColorNormal: options.editToolbarTitleColorNormal ? options.editToolbarTitleColorNormal : "#ffffff",
+		editToolbarTitleColorDisabled: options.editToolbarTitleColorDisabled ? options.editToolbarTitleColorDisabled : "#5c666a",
 	};
 
 	return cordova.exec(success, fail, "ImagePicker", "getPictures", [params]);

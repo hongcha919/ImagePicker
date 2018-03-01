@@ -85,7 +85,7 @@
         _scrollView = [[UIScrollView alloc] init];
         _scrollView.frame = CGRectMake(0, 0, self.width, self.height);
         _scrollView.bouncesZoom = YES;
-        _scrollView.maximumZoomScale = 2.5;
+        _scrollView.maximumZoomScale = 4.5;
         _scrollView.minimumZoomScale = 1.0;
         _scrollView.multipleTouchEnabled = YES;
         _scrollView.delegate = self;
@@ -277,7 +277,7 @@
     /** 如果已被设置图片，忽略这次图片获取 */
     if (self.previewImage == nil) {
         /** 普通图片处理 */
-        [[LFAssetManager manager] getPhotoWithAsset:model.asset photoWidth:[UIScreen mainScreen].bounds.size.width completion:completeHandler progressHandler:progressHandler networkAccessAllowed:YES];
+        [[LFAssetManager manager] getPhotoWithAsset:model.asset photoWidth:0 completion:completeHandler progressHandler:progressHandler networkAccessAllowed:YES];
     }
 }
 

@@ -40,6 +40,10 @@
         [UIDevice LFME_setOrientation:orientation];
         _oKButtonTitleColorNormal = [UIColor colorWithRed:(26/255.0) green:(173/255.0) blue:(25/255.0) alpha:1.0];
         _cancelButtonTitleColorNormal = [UIColor colorWithWhite:0.8f alpha:1.f];
+        _editNaviBgColor = [UIColor colorWithRed:(34/255.0) green:(34/255.0)  blue:(34/255.0) alpha:0.7];
+        _editToolbarTitleColorNormal = [UIColor colorWithWhite:1.0f alpha:1.f];
+        _editToolbarTitleColorDisabled = [UIColor colorWithRed:(92/255.0) green:(102/255.0) blue:(106/255.0) alpha:1.0];
+        
         _isHiddenStatusBar = YES;
         _oKButtonTitle = @"完成";
         _cancelButtonTitle = @"取消";

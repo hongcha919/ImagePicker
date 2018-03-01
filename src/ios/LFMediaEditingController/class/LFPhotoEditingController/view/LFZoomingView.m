@@ -27,7 +27,6 @@ NSString *const kLFZoomingViewData_splash = @"LFZoomingViewData_splash";
 /** 原始坐标 */
 @property (nonatomic, assign) CGRect originalRect;
 
-@property (nonatomic, weak) UIImageView *imageView;
 
 /** 绘画 */
 @property (nonatomic, weak) LFDrawView *drawView;

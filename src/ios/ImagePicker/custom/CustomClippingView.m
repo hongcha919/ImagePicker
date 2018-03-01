@@ -55,6 +55,10 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
 @property (nonatomic, assign) CGFloat old_maximumZoomScale;
 @property (nonatomic, assign) CGAffineTransform old_transform;
 
+@property (nonatomic, assign) CGFloat old_initZoomScale;
+@property (nonatomic, assign) CGRect old_initFrame;
+@property (nonatomic, assign) CGPoint old_initContentOffset;
+
 @end
 
 @implementation CustomClippingView
@@ -76,6 +80,7 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
     self.delegate = self;
     self.minimumZoomScale = 1.0f;
     self.maximumZoomScale = 5.0f;
+    self.customMinZoomScale = 1.0f;
     self.alwaysBounceHorizontal = YES;
     self.alwaysBounceVertical = YES;
     self.angle = 0;
@@ -145,7 +150,9 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
     CGFloat zoomScale = MIN(scaleZX, scaleZY);
     
     [self resetMinimumZoomScale];
-    self.maximumZoomScale = (zoomScale > 5 ? zoomScale : 5);
+    
+    CGFloat maxScale = 5/self.customMinZoomScale;
+    self.maximumZoomScale = (zoomScale > maxScale ? zoomScale : maxScale);
     [self setZoomScale:zoomScale];
     
     /** 记录首次最小缩放值 */
@@ -199,6 +206,9 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
                              self.contentSize = self.zoomingView.size;
                              /** 重置contentOffset */
                              self.contentOffset = CGPointZero;
+                             
+                             [self setInitZoomScale:self.old_initZoomScale];
+
                              if ([self.clippingDelegate respondsToSelector:@selector(lf_clippingViewWillBeginZooming:)]) {
                                  void (^block)(CGRect) = [self.clippingDelegate lf_clippingViewWillBeginZooming:self];
                                  if (block) block(self.frame);
@@ -214,14 +224,9 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
 
 - (BOOL)canReset
 {
-    CGRect trueFrame = CGRectMake((CGRectGetWidth(self.superview.frame)-CGRectGetWidth(self.zoomingView.frame))/2
-                                  , (CGRectGetHeight(self.superview.frame)-CGRectGetHeight(self.zoomingView.frame))/2
-                                  , CGRectGetWidth(self.zoomingView.frame)
-                                  , CGRectGetHeight(self.zoomingView.frame));
-    
-    return !(CGAffineTransformIsIdentity(self.transform)
-             && kCustomRound(self.zoomScale) == kCustomRound(self.minimumZoomScale)
-             && [self verifyRect:trueFrame]);
+    BOOL reset1 = CGAffineTransformIsIdentity(self.transform);
+    BOOL reset2 = kCustomRound(self.zoomScale) == kCustomRound(self.old_initZoomScale);
+    return !(reset1 && reset2 && [self verifyInintFrame]);
 }
 
 - (CGRect)cappedCropRectInImageRectWithCropRect:(CGRect)cropRect
@@ -241,6 +246,19 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
     }
     
     return cropRect;
+}
+
+- (void)setInitZoomScale:(CGFloat)scale
+{
+    [self setZoomScale:scale animated:NO];
+    self.old_initZoomScale = scale;
+    self.old_initFrame = self.zoomingView.frame;
+    self.old_initContentOffset = self.contentOffset;
+}
+
+- (BOOL)isSpecial
+{
+    return self.cutType<2;
 }
 
 #pragma mark 缩小到指定坐标
@@ -461,7 +479,7 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
     CGRect rect = CGRectApplyAffineTransform(r_rect, self.transform);
     /** 模糊匹配 */
     BOOL isEqual = CGRectEqualToRect(rect, self.frame);
-    
+
     if (isEqual == NO) {
         /** 精准验证 */
         BOOL x = kCustomRound(CGRectGetMinX(rect)) == kCustomRound(CGRectGetMinX(self.frame));
@@ -470,6 +488,31 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
         BOOL h = kCustomRound(CGRectGetHeight(rect)) == kCustomRound(CGRectGetHeight(self.frame));
         isEqual = x && y && w && h;
     }
+    return isEqual;
+}
+
+- (BOOL)verifyInintFrame
+{
+    CGRect rect = self.zoomingView.frame;
+    /** 模糊匹配 */
+    BOOL isEqual = CGRectEqualToRect(rect, self.old_initFrame);
+    
+    if (isEqual == NO) {
+        /** 精准验证 */
+        BOOL x = kCustomRound(CGRectGetMinX(rect)) == kCustomRound(CGRectGetMinX(self.old_initFrame));
+        BOOL y = kCustomRound(CGRectGetMinY(rect)) == kCustomRound(CGRectGetMinY(self.old_initFrame));
+        BOOL w = kCustomRound(CGRectGetWidth(rect)) == kCustomRound(CGRectGetWidth(self.old_initFrame));
+        BOOL h = kCustomRound(CGRectGetHeight(rect)) == kCustomRound(CGRectGetHeight(self.old_initFrame));
+        isEqual = x && y && w && h;
+    }
+    
+    if (isEqual) {
+        CGPoint offset = self.contentOffset;
+        BOOL x = kCustomRound(offset.x) == kCustomRound(self.old_initContentOffset.x);
+        BOOL y = kCustomRound(offset.y) == kCustomRound(self.old_initContentOffset.y);
+        isEqual = x && y;
+    }
+    
     return isEqual;
 }
 
@@ -504,8 +547,16 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
     CGAffineTransform transform = CGAffineTransformRotate(CGAffineTransformIdentity, angleInRadians);
     self.transform = transform;
     
-    /** 计算变形后的坐标拉伸到编辑范围 */
-    self.frame = AVMakeRectWithAspectRatioInsideRect(CGSizeMake(width, height), self.editRect);
+    if ([self isSpecial]) {
+        CGPoint center = self.center;
+        oldRect.size.width = width;
+        oldRect.size.height = height;
+        self.frame = oldRect;
+        self.center = center;
+    } else {
+        /** 计算变形后的坐标拉伸到编辑范围 */
+        self.frame = AVMakeRectWithAspectRatioInsideRect(CGSizeMake(width, height), self.editRect);
+    }
     /** 重置最小缩放比例 */
     [self resetMinimumZoomScale];
     /** 计算缩放比例 */
@@ -516,6 +567,8 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
     contentOffset.x *= scale;
     contentOffset.y *= scale;
     self.contentOffset = contentOffset;
+    
+    self.saveRect = self.frame;
 }
 
 #pragma mark - 重置最小缩放比例
@@ -579,11 +632,10 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
 }
 
 #pragma mark - 数据
-- (NSDictionary *)photoEditData
+- (NSDictionary *)getPhotoEditData:(BOOL)always
 {
     NSMutableDictionary *data = [@{} mutableCopy];
-    
-    if ([self canReset]) { /** 可还原证明已编辑过 */
+    if (always || [self isSpecial] || [self canReset]) { /** 可还原证明已编辑过 */
         //        CGRect trueFrame = CGRectApplyAffineTransform(self.frame, CGAffineTransformInvert(self.transform));
         NSDictionary *myData = @{kCustomClippingViewData_frame:[NSValue valueWithCGRect:self.saveRect]
                                  , kCustomClippingViewData_zoomScale:@(self.zoomScale)
@@ -594,7 +646,42 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
                                  , kCustomClippingViewData_clipsToBounds:@(self.clipsToBounds)
                                  , kCustomClippingViewData_first_minimumZoomScale:@(self.first_minimumZoomScale)
                                  , kCustomClippingViewData_transform:[NSValue valueWithCGAffineTransform:self.transform]
-                                 , kCustomClippingViewData_angle:@(self.angle)};
+                                 , kCustomClippingViewData_angle:@(self.angle)
+                                 , @"old_initZoomScale": @(self.old_initZoomScale)
+                                 , @"old_initFrame": [NSValue valueWithCGRect:self.old_initFrame]
+                                 , @"old_initContentOffset": [NSValue valueWithCGPoint:self.old_initContentOffset]
+                                 };
+        [data setObject:myData forKey:kCustomClippingViewData];
+    }
+    
+    NSDictionary *zoomingViewData = self.zoomingView.photoEditData;
+    if (zoomingViewData) [data setObject:zoomingViewData forKey:kCustomClippingViewData_zoomingView];
+    
+    if (data.count) {
+        return data;
+    }
+    return nil;
+}
+
+- (NSDictionary *)photoEditData
+{
+    NSMutableDictionary *data = [@{} mutableCopy];
+    if ([self isSpecial] || [self canReset]) { /** 可还原证明已编辑过 */
+        //        CGRect trueFrame = CGRectApplyAffineTransform(self.frame, CGAffineTransformInvert(self.transform));
+        NSDictionary *myData = @{kCustomClippingViewData_frame:[NSValue valueWithCGRect:self.saveRect]
+                                 , kCustomClippingViewData_zoomScale:@(self.zoomScale)
+                                 , kCustomClippingViewData_contentSize:[NSValue valueWithCGSize:self.contentSize]
+                                 , kCustomClippingViewData_contentOffset:[NSValue valueWithCGPoint:self.contentOffset]
+                                 , kCustomClippingViewData_minimumZoomScale:@(self.minimumZoomScale)
+                                 , kCustomClippingViewData_maximumZoomScale:@(self.maximumZoomScale)
+                                 , kCustomClippingViewData_clipsToBounds:@(self.clipsToBounds)
+                                 , kCustomClippingViewData_first_minimumZoomScale:@(self.first_minimumZoomScale)
+                                 , kCustomClippingViewData_transform:[NSValue valueWithCGAffineTransform:self.transform]
+                                 , kCustomClippingViewData_angle:@(self.angle)
+                                 , @"old_initZoomScale": @(self.old_initZoomScale)
+                                 , @"old_initFrame": [NSValue valueWithCGRect:self.old_initFrame]
+                                 , @"old_initContentOffset": [NSValue valueWithCGPoint:self.old_initContentOffset]
+                                 };
         [data setObject:myData forKey:kCustomClippingViewData];
     }
     
@@ -622,6 +709,10 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
         self.contentOffset = [myData[kCustomClippingViewData_contentOffset] CGPointValue];
         self.clipsToBounds = [myData[kCustomClippingViewData_clipsToBounds] boolValue];
         self.first_minimumZoomScale = [myData[kCustomClippingViewData_first_minimumZoomScale] floatValue];
+        
+        self.old_initZoomScale = [myData[@"old_initZoomScale"] floatValue];
+        self.old_initFrame = [myData[@"old_initFrame"] CGRectValue];
+        self.old_initContentOffset = [myData[@"old_initContentOffset"] CGPointValue];
     }
     
     self.zoomingView.photoEditData = photoEditData[kCustomClippingViewData_zoomingView];

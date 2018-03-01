@@ -26,7 +26,11 @@
 
 /** 开关编辑模式 */
 @property (nonatomic, assign) BOOL isClipping;
+
+@property (nonatomic, assign) float customMinZoomScale;
+
 - (void)setIsClipping:(BOOL)isClipping animated:(BOOL)animated;
+- (void)setIsClipping:(BOOL)isClipping animated:(BOOL)animated whRatio:(CGFloat)radio;
 
 /** 取消剪裁 */
 - (void)cancelClipping:(BOOL)animated;

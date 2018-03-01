@@ -19,7 +19,11 @@
 @property (nonatomic, assign) BOOL enableReset;
 
 @property (nonatomic, readonly) CGRect clickViewRect;
+/** 重置按钮 */
+@property (nonatomic, strong) UIButton *resetButton;
 
+- (void)hiddenResetButton:(BOOL)hidden;
+    
 @end
 
 @protocol CustomClipToolbarDelegate <NSObject>

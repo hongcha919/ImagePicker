@@ -71,10 +71,10 @@ NSString *const kLFClippingViewData_zoomingView = @"LFClippingViewData_zoomingVi
 
 - (void)customInit
 {
-    self.backgroundColor = [UIColor clearColor];
+    self.backgroundColor = [UIColor redColor];
     self.clipsToBounds = NO;
     self.delegate = self;
-    self.minimumZoomScale = 1.0f;
+    self.minimumZoomScale = 0.5f;
     self.maximumZoomScale = 5.0f;
     self.alwaysBounceHorizontal = YES;
     self.alwaysBounceVertical = YES;
@@ -90,7 +90,8 @@ NSString *const kLFClippingViewData_zoomingView = @"LFClippingViewData_zoomingVi
     };
     [self addSubview:zoomingView];
     self.zoomingView = zoomingView;
-    
+    self.zoomingView.alpha = 0.5;
+
     /** 默认编辑范围 */
     _editRect = self.bounds;
 }
@@ -246,6 +247,7 @@ NSString *const kLFClippingViewData_zoomingView = @"LFClippingViewData_zoomingVi
 #pragma mark 缩小到指定坐标
 - (void)zoomOutToRect:(CGRect)toRect
 {
+    return;
     /** 屏幕在滚动时 不触发该功能 */
     if (self.dragging || self.decelerating) {
         return;
@@ -341,6 +343,7 @@ NSString *const kLFClippingViewData_zoomingView = @"LFClippingViewData_zoomingVi
 #pragma mark 放大到指定坐标(必须大于当前坐标)
 - (void)zoomInToRect:(CGRect)toRect
 {
+    return;
     /** 屏幕在滚动时 不触发该功能 */
     if (self.dragging || self.decelerating) {
         return;
@@ -442,16 +445,37 @@ NSString *const kLFClippingViewData_zoomingView = @"LFClippingViewData_zoomingVi
 
 - (void)scrollViewDidZoom:(UIScrollView *)scrollView
 {
+    self.contentInset = UIEdgeInsetsZero;
+    self.scrollIndicatorInsets = UIEdgeInsetsZero;
+    [self refreshImageZoomViewCenter];
     if ([self.clippingDelegate respondsToSelector:@selector(lf_clippingViewDidZoom:)]) {
         [self.clippingDelegate lf_clippingViewDidZoom:self];
     }
 }
 
-- (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(nullable UIView *)view atScale:(CGFloat)scale
+- (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(CGFloat)scale
 {
+    CGRect realClipZoomRect = AVMakeRectWithAspectRatioInsideRect(self.zoomingView.imageView.size, self.zoomingView.frame);
+
+//    CGRect realClipZoomRect = self.zoomingView.frame;
+    CGFloat width = MAX(self.frame.size.width, realClipZoomRect.size.width);
+    CGFloat height = MAX(self.frame.size.height, realClipZoomRect.size.height);
+    CGFloat diffWidth = (width-self.zoomingView.frame.size.width)/2;
+    CGFloat diffHeight = (height-self.zoomingView.frame.size.height)/2;
+    self.contentInset = UIEdgeInsetsMake(diffHeight, diffWidth, diffHeight, diffWidth);
+    self.scrollIndicatorInsets = UIEdgeInsetsMake(diffHeight, diffWidth, diffHeight, diffWidth);
+    self.contentOffset = CGPointMake(0, 0);
+    self.contentSize = CGSizeMake(width, height);
+    
     if ([self.clippingDelegate respondsToSelector:@selector(lf_clippingViewDidEndZooming:)]) {
         [self.clippingDelegate lf_clippingViewDidEndZooming:self];
     }
+}
+
+- (void)refreshImageZoomViewCenter {
+    CGFloat offsetX = (self.width > self.contentSize.width) ? ((self.width - self.contentSize.width) * 0.5) : 0.0;
+    CGFloat offsetY = (self.height > self.contentSize.height) ? ((self.height - self.contentSize.height) * 0.5) : 0.0;
+    self.zoomingView.center = CGPointMake(self.contentSize.width * 0.5 + offsetX, self.contentSize.height * 0.5 + offsetY);
 }
 
 #pragma mark - 验证当前大小是否被修改
@@ -522,9 +546,9 @@ NSString *const kLFClippingViewData_zoomingView = @"LFClippingViewData_zoomingVi
 - (void)resetMinimumZoomScale
 {
     /** 重置最小缩放比例 */
-    CGRect rotateNormalRect = CGRectApplyAffineTransform(self.normalRect, self.transform);
-    CGFloat minimumZoomScale = MAX(CGRectGetWidth(self.frame) / CGRectGetWidth(rotateNormalRect), CGRectGetHeight(self.frame) / CGRectGetHeight(rotateNormalRect));
-    self.minimumZoomScale = minimumZoomScale;
+//    CGRect rotateNormalRect = CGRectApplyAffineTransform(self.normalRect, self.transform);
+//    CGFloat minimumZoomScale = MAX(CGRectGetWidth(self.frame) / CGRectGetWidth(rotateNormalRect), CGRectGetHeight(self.frame) / CGRectGetHeight(rotateNormalRect));
+//    self.minimumZoomScale = minimumZoomScale;
 }
 
 #pragma mark - 重写父类方法

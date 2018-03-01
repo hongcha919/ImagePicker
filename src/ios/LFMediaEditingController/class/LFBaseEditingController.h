@@ -22,6 +22,8 @@
 @property (nonatomic, copy) NSString *processHintStr;
 @property (nonatomic, strong) UIColor *editNaviBgColor;
 @property (nonatomic, strong) UIColor *editToolbarBgColor;
+@property (nonatomic, strong) UIColor *editToolbarTitleColorNormal;
+@property (nonatomic, strong) UIColor *editToolbarTitleColorDisabled;
 
 //- (void)showProgressHUDText:(NSString *)text;
 - (void)showProgressHUD;

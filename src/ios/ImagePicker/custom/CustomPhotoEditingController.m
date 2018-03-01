@@ -42,8 +42,6 @@
         
         self.cutType = 3;
         self.aspectWHRatio = 0;
-        
-        self.editNaviBgColor = [UIColor colorWithRed:(34/255.0) green:(34/255.0)  blue:(34/255.0) alpha:0.7];
     }
     return self;
 }
@@ -74,6 +72,8 @@
     [self configScrollView];
     [self configCustomNaviBar];
     [self configBottomToolBar];
+    
+//    [_edit_clipping_toolBar hiddenResetButton:(self.cutType<=1)];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -116,6 +116,7 @@
     _EditingView.editDelegate = self;
     _EditingView.clippingDelegate = self;
     _EditingView.cutType = self.cutType;
+    _EditingView.customMinZoomScale = self.customMinZoomScale;
     
     if (_photoEdit) {
         [self setEditImage:_photoEdit.editImage];
@@ -184,21 +185,18 @@
 
 - (void)configBottomToolBar
 {
-    [_EditingView setIsClipping:YES animated:self.isHiddenNavBar];
-    [_EditingView setAspectWHRatio:self.aspectWHRatio];
-
-    /** 关闭所有编辑 */
-    [_EditingView photoEditEnable:NO];
-    /** 切换菜单 */
-    self.edit_clipping_toolBar.alpha = 1.f;
-    [self.view addSubview:self.edit_clipping_toolBar];
-    _edit_clipping_toolBar.enableReset = self.cutType>1 && _EditingView.canReset;
-    
-//    if (self.cutType<=1) {
-//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-//            [self lf_clipToolbarDidReset:_edit_clipping_toolBar];
-//        });
-//    }
+    [_EditingView setIsClipping:YES animated:YES whRatio:self.aspectWHRatio];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [_EditingView setAspectWHRatio:self.aspectWHRatio];
+        
+        /** 关闭所有编辑 */
+        [_EditingView photoEditEnable:NO];
+        /** 切换菜单 */
+        self.edit_clipping_toolBar.alpha = 1.f;
+        [self.view addSubview:self.edit_clipping_toolBar];
+        _edit_clipping_toolBar.enableReset = [self enableReset];
+    });
+//    [self lf_clipToolbarDidReset:_edit_clipping_toolBar];
 }
 
 #pragma mark - 顶部栏(action)
@@ -219,7 +217,7 @@
     __block LFPhotoEdit *photoEdit = nil;
     NSDictionary *data = [_EditingView photoEditData];
     UIImage *image = nil;
-    if (data) {
+    if (self.cutType<2 || data) {
         image = [_EditingView createEditImage];
     }
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -254,6 +252,11 @@
         }
         _edit_clipping_toolBar = [[CustomClipToolbar alloc] initWithFrame:CGRectMake(0, self.view.height - h, self.view.width, h)];
         _edit_clipping_toolBar.backgroundColor = self.editToolbarBgColor;
+        [_edit_clipping_toolBar.resetButton setTitleColor:self.editToolbarTitleColorNormal forState:UIControlStateNormal];
+        [_edit_clipping_toolBar.resetButton setTitleColor:self.editToolbarTitleColorNormal forState:UIControlStateHighlighted];
+        [_edit_clipping_toolBar.resetButton setTitleColor:self.editToolbarTitleColorNormal forState:UIControlStateSelected];
+        [_edit_clipping_toolBar.resetButton setTitleColor:self.editToolbarTitleColorDisabled forState:UIControlStateDisabled];
+
         _edit_clipping_toolBar.delegate = self;
     }
     return _edit_clipping_toolBar;
@@ -264,26 +267,32 @@
 - (void)lf_clipToolbarDidReset:(CustomClipToolbar *)clipToolbar
 {
     [_EditingView reset];
-    _edit_clipping_toolBar.enableReset = self.cutType>1 && _EditingView.canReset;
+    _edit_clipping_toolBar.enableReset = [self enableReset];
     [_EditingView setAspectWHRatio:self.aspectWHRatio];
 }
 /** 旋转 */
 - (void)lf_clipToolbarDidRotate:(CustomClipToolbar *)clipToolbar
 {
     [_EditingView rotate];
-    _edit_clipping_toolBar.enableReset = self.cutType>1 && _EditingView.canReset;
+    _edit_clipping_toolBar.enableReset = [self enableReset];
 }
 
 #pragma mark - CustomEditingViewDelegate
 /** 剪裁发生变化后 */
 - (void)lf_EditingViewDidEndZooming:(CustomEditingView *)EditingView
 {
-    _edit_clipping_toolBar.enableReset = self.cutType>1 && EditingView.canReset;
+    _edit_clipping_toolBar.enableReset = [self enableReset];
 }
 /** 剪裁目标移动后 */
 - (void)lf_EditingViewEndDecelerating:(CustomEditingView *)EditingView
 {
-    _edit_clipping_toolBar.enableReset = self.cutType>1 && EditingView.canReset;
+    _edit_clipping_toolBar.enableReset = [self enableReset];
+}
+
+- (BOOL)enableReset
+{
+    return _EditingView.canReset;
+    return self.cutType>1 && _EditingView.canReset;
 }
 
 @end

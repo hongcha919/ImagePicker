@@ -103,6 +103,11 @@
 @property (nonatomic, copy) NSString *editCancelButtonTitle;
 @property (nonatomic, strong) UIColor *editNaviBgColor;
 @property (nonatomic, strong) UIColor *editToolbarBgColor;
+@property (nonatomic, strong) UIColor *editToolbarTitleColorNormal;
+@property (nonatomic, strong) UIColor *editToolbarTitleColorDisabled;
+
+//自定义最小缩放比例
+@property (nonatomic, assign) float customMinZoomScale;
 
 #pragma mark - option
 

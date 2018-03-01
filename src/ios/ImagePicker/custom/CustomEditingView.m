@@ -22,7 +22,9 @@
 
 #define customClipZoom_margin 15.f
 
-@interface CustomEditingView () <UIScrollViewDelegate, CustomClippingViewDelegate, CustomGridViewDelegate>
+@interface CustomEditingView () <UIScrollViewDelegate, CustomClippingViewDelegate, CustomGridViewDelegate> {
+    NSDictionary *_photoEditData;
+}
 
 @property (nonatomic, weak) CustomClippingView *clippingView;
 @property (nonatomic, weak) CustomGridView *gridView;
@@ -42,6 +44,8 @@
 @property (nonatomic, assign) CGFloat editToolbarDefaultHeight;
 
 @property (nonatomic, copy) custom_dispatch_cancelable_block_t maskViewBlock;
+
+@property (nonatomic, assign) float oldCustomMinZoomScale;
 
 @end
 
@@ -81,6 +85,7 @@
     /** 创建剪裁层 */
     CustomClippingView *clippingView = [[CustomClippingView alloc] initWithFrame:self.bounds];
     clippingView.clippingDelegate = self;
+    clippingView.customMinZoomScale = self.customMinZoomScale;
     /** 非剪裁情况禁止剪裁层移动 */
     clippingView.scrollEnabled = NO;
     [self.clipZoomView addSubview:clippingView];
@@ -111,11 +116,13 @@
     imagePixel.alpha = 0.f;
     [self addSubview:imagePixel];
     self.imagePixel = imagePixel;
+    self.imagePixel.hidden = true;
 }
 
 - (void)setCutType:(NSInteger)cutType
 {
     _cutType = cutType;
+    self.clippingView.cutType = cutType;
     self.gridView.cutType = cutType;
 }
 
@@ -177,12 +184,28 @@
     }
 }
 
+- (void)setCustomMinZoomScale:(float)customMinZoomScale
+{
+    _customMinZoomScale = customMinZoomScale;
+    if (self.clippingView) {
+        self.clippingView.customMinZoomScale = customMinZoomScale;
+    }
+}
+
 - (void)setIsClipping:(BOOL)isClipping
 {
     [self setIsClipping:isClipping animated:NO];
 }
 - (void)setIsClipping:(BOOL)isClipping animated:(BOOL)animated
 {
+    if ([self isSpecial]) {
+        CGRect rect = self.frame;
+        CGRect clippingRect = AVMakeRectWithAspectRatioInsideRect(self.clippingView.size, rect);
+        self.customMinZoomScale = ((self.image.size.height>self.image.size.width)?(clippingRect.size.width)/(clippingRect.size.height):1) * self.customMinZoomScale;
+    }
+    
+    self.minimumZoomScale = self.customMinZoomScale;
+
     _isClipping = isClipping;
     self.clippingView.scrollEnabled = isClipping;
     if (isClipping) {
@@ -233,6 +256,73 @@
         }
     }
 }
+
+- (void)setIsClipping:(BOOL)isClipping animated:(BOOL)animated whRatio:(CGFloat)radio
+{
+    self.oldCustomMinZoomScale = self.customMinZoomScale;
+    
+    if ([self isSpecial]) {
+        if (radio<0.0001) {
+            radio = 1;
+        }
+        CGRect rect = self.frame;
+        CGRect clippingRect = AVMakeRectWithAspectRatioInsideRect(self.clippingView.size, rect);
+        self.customMinZoomScale = ((self.image.size.height>self.image.size.width)?(clippingRect.size.width)/(clippingRect.size.height):1) * self.customMinZoomScale / radio;
+    }
+    
+    self.minimumZoomScale = self.customMinZoomScale;
+    
+    _isClipping = isClipping;
+    self.clippingView.scrollEnabled = isClipping;
+    if (isClipping) {
+        /** 动画切换 */
+        if (animated) {
+            [UIView animateWithDuration:0.25f animations:^{
+                CGRect rect = CGRectInset(self.frame , 20, 65);
+                self.clippingRect = AVMakeRectWithAspectRatioInsideRect(self.clippingView.size, rect);
+            } completion:^(BOOL finished) {
+                [UIView animateWithDuration:0.25f animations:^{
+                    self.imagePixel.alpha = 1.f;
+                    self.gridView.alpha = 1.f;
+                } completion:^(BOOL finished) {
+                    /** 显示多余部分 */
+                    self.clippingView.clipsToBounds = NO;
+                }];
+            }];
+        } else {
+            CGRect rect = CGRectInset(self.frame , 20, 65);
+            self.clippingRect = AVMakeRectWithAspectRatioInsideRect(self.clippingView.size, rect);
+            self.gridView.alpha = 1.f;
+            self.imagePixel.alpha = 1.f;
+            /** 显示多余部分 */
+            self.clippingView.clipsToBounds = NO;
+        }
+        [self updateImagePixelText];
+    } else {
+        /** 重置最大缩放 */
+        if (animated) {
+            /** 剪裁多余部分 */
+            self.clippingView.clipsToBounds = YES;
+            [UIView animateWithDuration:0.1f animations:^{
+                self.gridView.alpha = 0.f;
+                self.imagePixel.alpha = 0.f;
+            } completion:^(BOOL finished) {
+                [UIView animateWithDuration:0.25f animations:^{
+                    CGRect cropRect = AVMakeRectWithAspectRatioInsideRect(self.clippingView.size, self.frame);
+                    self.clippingRect = cropRect;
+                }];
+            }];
+        } else {
+            /** 剪裁多余部分 */
+            self.clippingView.clipsToBounds = YES;
+            self.gridView.alpha = 0.f;
+            self.imagePixel.alpha = 0.f;
+            CGRect cropRect = AVMakeRectWithAspectRatioInsideRect(self.clippingView.size, self.frame);
+            self.clippingRect = cropRect;
+        }
+    }
+}
+
 
 /** 取消剪裁 */
 - (void)cancelClipping:(BOOL)animated
@@ -290,13 +380,16 @@
 - (void)setAspectWHRatio:(float)aspectWHRatio
 {
     _aspectWHRatio = aspectWHRatio;
-    [self.gridView setAspectWHRatio:aspectWHRatio];
-//    NSInteger index = 0;
-//    NSArray *aspectRatioDescs = [self aspectRatioDescs];
-//    if (aspectRatio.length && [aspectRatioDescs containsObject:aspectRatio]) {
-//        index = [aspectRatioDescs indexOfObject:aspectRatio] + 1;
-//    }
-//    [self.gridView setAspectRatio:(CustomGridViewAspectRatioType)index];
+    if ([self isSpecial]) {
+        CGRect rect = CGRectInset(self.frame , 20, 65);
+        rect.origin.y += (rect.size.height-rect.size.width)/2.;
+        rect.size.height = rect.size.width;
+        [self.gridView setAspectWHRatio:aspectWHRatio rect:rect];
+    } else {
+        [self.gridView setAspectWHRatio:aspectWHRatio];
+    }
+
+    [self zoomToInit];
 }
 
 /** 创建编辑图片 */
@@ -304,7 +397,9 @@
 {
     CGFloat zoomScale = self.zoomScale;
     [self setZoomScale:1.f];
-    UIImage *image = [self.clipZoomView LFME_captureImageAtFrame:self.clippingView.frame cutType:self.cutType cornerRadius:10];
+    
+    self.gridView.hidden = true;
+    UIImage *image = [self LFME_captureImageAtFrame:self.gridView.gridRect cutType:self.cutType cornerRadius:10];
     [self setZoomScale:zoomScale];
     
     return image;
@@ -316,6 +411,18 @@
     return [self.gridView getResetRect:rect];
 }
 
+- (BOOL)isSpecial
+{
+    return self.cutType<2;
+}
+
+- (void)zoomToInit
+{
+    if (_photoEditData==nil) {
+        [self.clippingView setInitZoomScale: self.clippingView.minimumZoomScale/self.oldCustomMinZoomScale];
+    }
+}
+
 #pragma mark - CustomClippingViewDelegate
 - (void (^)(CGRect))lf_clippingViewWillBeginZooming:(CustomClippingView *)clippingView
 {
@@ -323,10 +430,14 @@
     void (^block)(CGRect) = ^(CGRect rect){
         CGRect nRect = [weakSelf getResetRect:rect];
         if (clippingView.isReseting || clippingView.isRotating) { /** 重置/旋转 需要将遮罩显示也重置 */
-            [weakSelf.gridView setGridRect:nRect maskLayer:YES animated:YES];
+            if ([self isSpecial]) {
+                weakSelf.gridView.showMaskLayer = NO;
+            } else {
+                [weakSelf.gridView setGridRect:nRect maskLayer:YES animated:YES];
+            }
         } else if (clippingView.isZooming) { /** 缩放 */
             weakSelf.gridView.showMaskLayer = NO;
-            //lf_me_dispatch_cancel(weakSelf.maskViewBlock);
+//            lf_me_dispatch_cancel(weakSelf.maskViewBlock);
         } else {
             [weakSelf.gridView setGridRect:nRect animated:YES];
         }
@@ -398,9 +509,14 @@
 /** 调整长宽比例 */
 - (void)lf_gridViewDidAspectRatio:(CustomGridView *)gridView
 {
-    [self lf_gridViewDidBeginResizing:gridView];
-    [self lf_gridViewDidResizing:gridView];
-    [self lf_gridViewDidEndResizing:gridView];
+    if (![self isSpecial]) {
+        [self lf_gridViewDidBeginResizing:gridView];
+        [self lf_gridViewDidResizing:gridView];
+        [self lf_gridViewDidEndResizing:gridView];
+    }
+    else {
+        self.gridView.showMaskLayer = YES;
+    }
 }
 
 #pragma mark - UIScrollViewDelegate
@@ -508,11 +624,14 @@
 #pragma mark - 数据
 - (NSDictionary *)photoEditData
 {
-    return self.clippingView.photoEditData;
+    BOOL change = [self.gridView gridRectChange];
+    return [self.clippingView getPhotoEditData:!change];
+//    return self.clippingView.photoEditData;
 }
 
 - (void)setPhotoEditData:(NSDictionary *)photoEditData
 {
+    _photoEditData = photoEditData;
     self.clippingView.photoEditData = photoEditData;
     self.maximumZoomScale = MIN(MAX(self.minimumZoomScale + customMaxZoomScale - customMaxZoomScale * (self.clippingView.zoomScale/self.clippingView.maximumZoomScale), self.minimumZoomScale), customMaxZoomScale);
 }

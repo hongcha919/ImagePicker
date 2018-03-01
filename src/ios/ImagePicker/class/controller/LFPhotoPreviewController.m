@@ -644,6 +644,7 @@ CGFloat const previewBarDefaultHeight = 64.f;
 }
 
 - (void)editButtonClick {
+    _editButton.enabled = false;
     if (self.models.count > self.currentIndex) {
         LFImagePickerController *imagePickerVc = [self navi];
         /** 获取缓存编辑对象 */
@@ -655,7 +656,8 @@ CGFloat const previewBarDefaultHeight = 64.f;
             CustomPhotoEditingController *photoEditingVC = [[CustomPhotoEditingController alloc] init];
             photoEditingVC.cutType = imagePickerVc.cutType;
             photoEditingVC.aspectWHRatio = imagePickerVc.aspectWHRatio;
-            
+            photoEditingVC.customMinZoomScale = imagePickerVc.customMinZoomScale;
+
             if (imagePickerVc.editOKButtonTitle) {
                 photoEditingVC.oKButtonTitle = imagePickerVc.editOKButtonTitle;
             }
@@ -674,7 +676,12 @@ CGFloat const previewBarDefaultHeight = 64.f;
             if (imagePickerVc.editToolbarBgColor) {
                 photoEditingVC.editToolbarBgColor = imagePickerVc.editToolbarBgColor;
             }
-            
+            if (imagePickerVc.editToolbarTitleColorNormal) {
+                photoEditingVC.editToolbarTitleColorNormal = imagePickerVc.editToolbarTitleColorNormal;
+            }
+            if (imagePickerVc.editToolbarTitleColorDisabled) {
+                photoEditingVC.editToolbarTitleColorDisabled = imagePickerVc.editToolbarTitleColorDisabled;
+            }
             editingVC = photoEditingVC;
             photoEditingVC.operationType = LFPhotoEditOperationType_crop;
             
@@ -714,6 +721,7 @@ CGFloat const previewBarDefaultHeight = 64.f;
             [imagePickerVc pushViewController:editingVC animated:NO];
         }
     }
+    _editButton.enabled = true;
 }
 
 - (void)originalPhotoButtonClick {

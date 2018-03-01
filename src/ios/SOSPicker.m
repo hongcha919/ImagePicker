@@ -89,7 +89,8 @@ typedef enum : NSUInteger {
     //    imagePicker.defaultAlbumName = @"123"; /** 指定默认显示相册 */
     //    imagePicker.displayImageFilename = YES; /** 显示文件名称 */
     imagePicker.allowPickingVideo = NO;
-    
+    imagePicker.customMinZoomScale = [[options objectForKey:@"customMinZoomScale"] floatValue];
+
     imagePicker.maxImagesCount = maximumImagesCount;
     imagePicker.cutType = cutType;
     if ((cutWidth==0 || cutHeigth==0) || cutType>1) {
@@ -120,6 +121,8 @@ typedef enum : NSUInteger {
     imagePicker.editOKButtonTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editOKButtonTitleColorNormal"]];
     imagePicker.editCancelButtonTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editCancelButtonTitleColorNormal"]];
     imagePicker.editToolbarBgColor = [self colorWithHexString:[options objectForKey:@"editToolbarBgColor"]];
+    imagePicker.editToolbarTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editToolbarTitleColorNormal"]];
+    imagePicker.editToolbarTitleColorDisabled = [self colorWithHexString:[options objectForKey:@"editToolbarTitleColorDisabled"]];
 
     /// 自定义文字
     imagePicker.doneBtnTitleStr = @"确认";

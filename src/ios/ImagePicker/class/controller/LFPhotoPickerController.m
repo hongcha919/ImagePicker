@@ -31,7 +31,7 @@
 
 #import <MobileCoreServices/UTCoreTypes.h>
 
-#define kBottomToolBarHeight 50.f
+#define kBottomToolBarHeight 44.f
 
 @interface LFCollectionView : UICollectionView
 
@@ -202,6 +202,10 @@
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
+    LFImagePickerController *imagePickerVc = (LFImagePickerController *)self.navigationController;
+    if (imagePickerVc.maxImagesCount==1 && imagePickerVc.cutType<=1) {
+        [imagePickerVc.selectedModels removeAllObjects];
+    }
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -279,7 +283,7 @@
         LFImagePickerController *imagePickerVc = (LFImagePickerController *)self.navigationController;
         
         UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
-        CGFloat margin = isiPad ? 15 : 8;
+        CGFloat margin = isiPad ? 15 : 4;
         CGFloat screenWidth = MIN(self.view.width, self.view.height);
         CGFloat itemWH = (screenWidth - (imagePickerVc.columnNumber + 1) * margin) / imagePickerVc.columnNumber;
         layout.itemSize = CGSizeMake(itemWH, itemWH);
@@ -741,6 +745,7 @@
         [self takePhoto]; return;
     }
     if (imagePickerVc.cutType<=1 && imagePickerVc.maxImagesCount==1) {
+        collectionView.userInteractionEnabled = false;
         /** 获取缓存编辑对象 */
         NSInteger index = indexPath.row;
         if (!imagePickerVc.sortAscendingByCreateDate && _showTakePhotoBtn) {
@@ -753,7 +758,8 @@
             photoEditingVC.cutType = imagePickerVc.cutType;
             photoEditingVC.aspectWHRatio = imagePickerVc.aspectWHRatio;
             photoEditingVC.operationType = LFPhotoEditOperationType_crop;
-            
+            photoEditingVC.customMinZoomScale = imagePickerVc.customMinZoomScale;
+
             if (imagePickerVc.editOKButtonTitle) {
                 photoEditingVC.oKButtonTitle = imagePickerVc.editOKButtonTitle;
             }
@@ -769,7 +775,16 @@
             if (imagePickerVc.editNaviBgColor) {
                 photoEditingVC.editNaviBgColor = imagePickerVc.editNaviBgColor;
             }
-
+            if (imagePickerVc.editToolbarBgColor) {
+                photoEditingVC.editToolbarBgColor = imagePickerVc.editToolbarBgColor;
+            }
+            if (imagePickerVc.editToolbarTitleColorNormal) {
+                photoEditingVC.editToolbarTitleColorNormal = imagePickerVc.editToolbarTitleColorNormal;
+            }
+            if (imagePickerVc.editToolbarTitleColorDisabled) {
+                photoEditingVC.editToolbarTitleColorDisabled = imagePickerVc.editToolbarTitleColorDisabled;
+            }
+            
             photoEditingVC.delegate = self;
             if (imagePickerVc.photoEditLabrary) {
                 imagePickerVc.photoEditLabrary(photoEditingVC);
@@ -781,13 +796,15 @@
             if (photoEdit) {
                 photoEditingVC.photoEdit = photoEdit;
                 [self pushEditViewController:photoEditingVC];
+                collectionView.userInteractionEnabled = true;
             } else {
                 /** 当前页面只显示一张图片 */
-                [[LFAssetManager manager] getPhotoWithAsset:model.asset photoWidth:[UIScreen mainScreen].bounds.size.width completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+                [[LFAssetManager manager] getPhotoWithAsset:model.asset photoWidth:0 completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
                     if (!isDegraded) {
                         CGSize imgSize = photo.size;
                         photoEditingVC.editImage = photo;
                         [self pushEditViewController:photoEditingVC];
+                        collectionView.userInteractionEnabled = true;
                     }
                 }];
             }

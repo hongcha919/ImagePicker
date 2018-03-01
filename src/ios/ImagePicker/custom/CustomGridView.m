@@ -16,6 +16,9 @@
 const CGFloat customControlWidth = 30.f;
 
 @interface CustomGridView () <lf_resizeConrolDelegate>
+{
+    CGRect _oldgridRect;
+}
 
 @property (nonatomic, weak) LFResizeControl *topLeftCornerView;
 @property (nonatomic, weak) LFResizeControl *topRightCornerView;
@@ -139,6 +142,11 @@ const CGFloat customControlWidth = 30.f;
     self.userInteractionEnabled = showMaskLayer;
 }
 
+- (BOOL)gridRectChange
+{
+    return CGRectEqualToRect(_oldgridRect, _gridRect);
+}
+
 #pragma mark - lf_resizeConrolDelegate
 
 - (void)lf_resizeConrolDidBeginResizing:(LFResizeControl *)resizeConrol
@@ -191,6 +199,24 @@ const CGFloat customControlWidth = 30.f;
     }
 }
 
+- (void)setAspectWHRatio:(float)aspectWHRatio rect:(CGRect)rect
+{
+    if (_aspectWHRatio != aspectWHRatio) {
+        _aspectWHRatio = aspectWHRatio;
+        CGSize size = self.aspectRatioSize;
+        if (!CGSizeEqualToSize(size, CGSizeZero)) {
+            CGRect gridRect = rect;            
+            _oldgridRect = rect;
+            
+            [self setGridRect:gridRect maskLayer:YES];
+            
+            if ([self.delegate respondsToSelector:@selector(lf_gridViewDidAspectRatio:)]) {
+                [self.delegate lf_gridViewDidAspectRatio:self];
+            }
+        }
+    }
+}
+
 - (void)setAspectWHRatio:(float)aspectWHRatio
 {
     if (_aspectWHRatio != aspectWHRatio) {
@@ -212,7 +238,9 @@ const CGFloat customControlWidth = 30.f;
             gridRect.size.height = newHeight;
             gridRect.origin.y = gridRect.origin.y + diffHeight/2;
             
-            [self setGridRect:gridRect maskLayer:NO];
+            _oldgridRect = gridRect;
+            
+            [self setGridRect:gridRect maskLayer:YES];
             
             if ([self.delegate respondsToSelector:@selector(lf_gridViewDidAspectRatio:)]) {
                 [self.delegate lf_gridViewDidAspectRatio:self];
