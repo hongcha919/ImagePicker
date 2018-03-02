@@ -267,7 +267,7 @@
         }
         CGRect rect = self.frame;
         CGRect clippingRect = AVMakeRectWithAspectRatioInsideRect(self.clippingView.size, rect);
-        self.customMinZoomScale = ((self.image.size.height>self.image.size.width)?(clippingRect.size.width)/(clippingRect.size.height):1) * self.customMinZoomScale / radio;
+        self.customMinZoomScale = ((self.image.size.height>self.image.size.width)?(clippingRect.size.width)/(clippingRect.size.height):1) * self.customMinZoomScale;
     }
     
     self.minimumZoomScale = self.customMinZoomScale;
@@ -381,9 +381,19 @@
 {
     _aspectWHRatio = aspectWHRatio;
     if ([self isSpecial]) {
+        if (aspectWHRatio==0) {
+            _aspectWHRatio = aspectWHRatio = _image.size.width/_image.size.height;
+        }
         CGRect rect = CGRectInset(self.frame , 20, 65);
-        rect.origin.y += (rect.size.height-rect.size.width)/2.;
-        rect.size.height = rect.size.width;
+        if (rect.size.width/rect.size.height<aspectWHRatio) {
+            CGFloat h = rect.size.width/aspectWHRatio;
+            rect.origin.y += (rect.size.height-h)/2.;
+            rect.size.height = h;
+        } else {
+            CGFloat w = rect.size.height * aspectWHRatio;
+            rect.origin.x += (rect.size.width-w)/2.;
+            rect.size.width = w;
+        }
         [self.gridView setAspectWHRatio:aspectWHRatio rect:rect];
     } else {
         [self.gridView setAspectWHRatio:aspectWHRatio];
@@ -419,7 +429,37 @@
 - (void)zoomToInit
 {
     if (_photoEditData==nil) {
-        [self.clippingView setInitZoomScale: self.clippingView.minimumZoomScale/self.oldCustomMinZoomScale];
+        CGRect gridRect = self.gridView.gridRect;
+        CGRect rect = CGRectInset(self.frame , 20, 65);
+
+        CGSize size = _image.size;
+        float radio = 1;
+        float imageRadio = size.width/size.height;
+        
+        if (_aspectWHRatio==0) {
+
+        } else if (_aspectWHRatio >= 1) {
+            CGFloat nHeight = (size.height*gridRect.size.width)/size.width;
+            if (imageRadio>=1 && imageRadio>=_aspectWHRatio) {
+                radio = 1.0;
+            } else  if (imageRadio>=1 && imageRadio<_aspectWHRatio) {
+                radio = nHeight/gridRect.size.height;
+            } else {
+                radio = _aspectWHRatio;
+            }
+        } else {
+            if (imageRadio<1 && imageRadio<=_aspectWHRatio) {
+                radio = _aspectWHRatio;
+            } else if (imageRadio<1 && imageRadio>_aspectWHRatio) {
+                CGFloat oWidth =  (size.width*rect.size.width)/size.height;
+                CGFloat nWidth = gridRect.size.width;
+                radio = oWidth/nWidth;
+            } else {
+                radio = rect.size.width/gridRect.size.width;
+            }
+        }
+        float scale = self.clippingView.minimumZoomScale/self.oldCustomMinZoomScale/radio;
+        [self.clippingView setInitZoomScale: scale];
     }
 }
 

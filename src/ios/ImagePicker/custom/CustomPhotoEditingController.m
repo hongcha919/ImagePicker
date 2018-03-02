@@ -291,8 +291,9 @@
 
 - (BOOL)enableReset
 {
-    return _EditingView.canReset;
-    return self.cutType>1 && _EditingView.canReset;
+    return YES;
+//    return _EditingView.canReset;
+//    return self.cutType>1 && _EditingView.canReset;
 }
 
 @end
