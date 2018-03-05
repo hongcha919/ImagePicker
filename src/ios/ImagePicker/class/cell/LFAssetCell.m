@@ -81,10 +81,12 @@
     _editMaskImageView = editMaskImageView;
     
     /** 选择按钮 */
+    float sep = 45;
     UIButton *selectPhotoButton = [[UIButton alloc] init];
-    selectPhotoButton.frame = CGRectMake(self.width - 30 - kAdditionalSize, 0, 30 + kAdditionalSize, 30 + kAdditionalSize);
+    selectPhotoButton.frame = CGRectMake(self.width - sep - kAdditionalSize, 0, sep + kAdditionalSize, sep + kAdditionalSize);
     [selectPhotoButton addTarget:self action:@selector(selectPhotoButtonClick:) forControlEvents:UIControlEventTouchUpInside];
     [self.contentView addSubview:selectPhotoButton];
+//    selectPhotoButton.backgroundColor = [UIColor redColor];
     _selectPhotoButton = selectPhotoButton;
     
     UIImageView *selectImageView = [[UIImageView alloc] init];
@@ -212,7 +214,8 @@
     if (onlySelected) {
         _selectPhotoButton.frame = self.bounds;
     } else {
-        _selectPhotoButton.frame = CGRectMake(self.width - 30 - kAdditionalSize, 0, 30 + kAdditionalSize, 30 + kAdditionalSize);
+        float sep = 45;
+        _selectPhotoButton.frame = CGRectMake(self.width - sep - kAdditionalSize, 0, sep + kAdditionalSize, sep + kAdditionalSize);
     }
 }
 
