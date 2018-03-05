@@ -314,6 +314,11 @@
 
 #pragma mark - Public
 
+- (void)setCutType:(NSInteger)cutType {
+    _cutType = cutType;
+    self.autoSavePhotoAlbum = (_cutType>1);
+}
+
 - (void)cancelButtonClick {
     if (self.autoDismiss) {
         [self dismissViewControllerAnimated:YES completion:^{
