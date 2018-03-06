@@ -60,7 +60,7 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 		height: options.height ? options.height : 0,
 		quality: options.quality ? options.quality : 100,
 
-		cutType: (options.cutType || options.cutType==0) ? options.cutType : 3,
+		cutType: (options.cutType || options.cutType==0) ? options.cutType : 2,
 		cutWidth: options.cutWidth ? options.cutWidth : 0,
 		cutHeigth: options.cutHeigth ? options.cutHeigth : 0,
 
@@ -72,13 +72,13 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 		naviTitleColor: options.naviTitleColor ? options.naviTitleColor : "#ffffff",
 		barItemTextColor: options.barItemTextColor ? options.barItemTextColor : "#ffffff",
 		previewNaviBgColor: options.previewNaviBgColor ? options.previewNaviBgColor : "#222222e6",
-		toolbarBgColor: options.toolbarBgColor ? options.toolbarBgColor : "#1a1a1ae6",
+		toolbarBgColor: options.toolbarBgColor ? options.toolbarBgColor : "#393A3F",
 		toolbarTitleColorNormal: options.toolbarTitleColorNormal ? options.toolbarTitleColorNormal : "#ffffff",
 		toolbarTitleColorDisabled: options.toolbarTitleColorDisabled ? options.toolbarTitleColorDisabled : "#5c666a",
 		editNaviBgColor: options.editNaviBgColor ? options.editNaviBgColor : "#222222e6",
 		editOKButtonTitleColorNormal: options.editOKButtonTitleColorNormal ? options.editOKButtonTitleColorNormal : "#1aad19",
 		editCancelButtonTitleColorNormal: options.editCancelButtonTitleColorNormal ? options.editCancelButtonTitleColorNormal : "#cccccc",
-		editToolbarBgColor: options.editToolbarBgColor ? options.editToolbarBgColor : "#1a1a1ae6",
+		editToolbarBgColor: options.editToolbarBgColor ? options.editToolbarBgColor : "#393A3F",
 		editToolbarTitleColorNormal: options.editToolbarTitleColorNormal ? options.editToolbarTitleColorNormal : "#ffffff",
 		editToolbarTitleColorDisabled: options.editToolbarTitleColorDisabled ? options.editToolbarTitleColorDisabled : "#5c666a",
 	};
