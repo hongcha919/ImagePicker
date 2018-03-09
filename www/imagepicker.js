@@ -78,7 +78,7 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 		editNaviBgColor: options.editNaviBgColor ? options.editNaviBgColor : "#222222e6",
 		editOKButtonTitleColorNormal: options.editOKButtonTitleColorNormal ? options.editOKButtonTitleColorNormal : "#1aad19",
 		editCancelButtonTitleColorNormal: options.editCancelButtonTitleColorNormal ? options.editCancelButtonTitleColorNormal : "#cccccc",
-		editToolbarBgColor: options.editToolbarBgColor ? options.editToolbarBgColor : "#1a1a1ae6",
+		editToolbarBgColor: options.editToolbarBgColor ? options.editToolbarBgColor : "#393A3F",
 		editToolbarTitleColorNormal: options.editToolbarTitleColorNormal ? options.editToolbarTitleColorNormal : "#ffffff",
 		editToolbarTitleColorDisabled: options.editToolbarTitleColorDisabled ? options.editToolbarTitleColorDisabled : "#5c666a",
 	};
