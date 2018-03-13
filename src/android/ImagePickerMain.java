@@ -90,7 +90,9 @@ public class ImagePickerMain extends CordovaPlugin {
                     imagePicker.setStyle(CropImageView.Style.RECTANGLE);
                     int cutWidth = params.optInt("cutWidth", 1);
                     int cutHeight = params.optInt("cutHeight", 1);
-                    imagePicker.setAspectRatio(new AspectRatio(cutWidth, cutHeight));
+                    if (cutWidth > 0 && cutHeight > 0) {
+                        imagePicker.setAspectRatio(new AspectRatio(cutWidth, cutHeight));
+                    }
                     imagePicker.setDynamicCrop(true);
                     imagePicker.setMultiMode(true);
                 }
@@ -119,7 +121,7 @@ public class ImagePickerMain extends CordovaPlugin {
                     for (ImageItem image : images) {
                         String result = image.path;
                         boolean saved = false;
-                        String destPath = ImagePicker.createFile(ImagePicker.getInstance().getCropCacheFolder(cordova.getContext()), "IMG_"+System.currentTimeMillis(), ".png").getAbsolutePath();
+                        String destPath = ImagePicker.createFile(ImagePicker.getInstance().getCropCacheFolder(cordova.getActivity()), "IMG_"+System.currentTimeMillis(), ".png").getAbsolutePath();
                         if (ImagePicker.getInstance().isOrigin() || ImagePicker.getInstance().getOutPutX() == 0 || ImagePicker.getInstance().getOutPutY() == 0) {
                             //原图按图片原始尺寸压缩, size小于150kb的不压缩
                             if (isNeedCompress(150, result)) {

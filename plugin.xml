@@ -255,11 +255,6 @@
                 android:configChanges="orientation|screenSize"
                 android:theme="@style/ImagePickerTheme"/>
             <activity
-                android:name="com.rxxb.imagepicker.ui.ImageCropActivity"
-                android:configChanges="orientation|screenSize"
-                android:hardwareAccelerated="false"
-                android:theme="@style/ImagePickerTheme"/>
-            <activity
                 android:name="com.rxxb.imagepicker.ui.CropActivity"
                 android:configChanges="orientation|screenSize"
                 android:theme="@style/ImagePickerTheme"/>
