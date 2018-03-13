@@ -68,7 +68,7 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 
 		oKButtonTitleColorNormal: options.oKButtonTitleColorNormal ? options.oKButtonTitleColorNormal : "#1aad19",
 		oKButtonTitleColorDisabled: options.oKButtonTitleColorDisabled ? options.oKButtonTitleColorDisabled : "#175216",
-		naviBgColor: options.naviBgColor ? options.naviBgColor : "#222222e6",
+		naviBgColor: options.naviBgColor ? options.naviBgColor : "#393A3F",
 		naviTitleColor: options.naviTitleColor ? options.naviTitleColor : "#ffffff",
 		barItemTextColor: options.barItemTextColor ? options.barItemTextColor : "#ffffff",
 		previewNaviBgColor: options.previewNaviBgColor ? options.previewNaviBgColor : "#222222e6",
