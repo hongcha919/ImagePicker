@@ -410,6 +410,8 @@
             
             [_originalPhotoButton addSubview:_originalPhotoLabel];
             if (_originalPhotoButton.selected) [self getSelectedPhotoBytes];
+            
+            [self originalPhotoButtonClick];
         }
         
         CGSize doneSize = [[imagePickerVc.doneBtnTitleStr stringByAppendingFormat:@"(%ld)", (long)imagePickerVc.maxImagesCount] boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName:toolbarTitleFont} context:nil].size;
