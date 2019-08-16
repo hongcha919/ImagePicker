@@ -22,31 +22,51 @@ using the Cordova / Phonegap command line interface.
 
 The plugin creates the object `window.imagePicker` with the method `getPictures(success, fail, options)`
 
-Example - Get Full Size Images (all default options):
+Example for iOS - Get Images:
 ```javascript
-window.imagePicker.getPictures(
-    function(results) {
-        for (var i = 0; i < results.length; i++) {
-            console.log('Image URI: ' + results[i]);
+window.imagePicker.upload(
+    function (result) {
+        alert(JSON.stringify(result));
+        result = result.medias;
+        var content = '';
+        for (var i = 0; i < result.length; i++) {
+            content += '<img src="' + result[i].originUrl + '" style="max-width:200px"/>';
         }
+        document.getElementById("imageOutput").innerHTML = content;
     }, function (error) {
-        console.log('Error: ' + error);
-    }
-);
-```
-
-Example - Get at most 10 images scaled to width of 800:
-```javascript
-window.imagePicker.getPictures(
-    function(results) {
-        for (var i = 0; i < results.length; i++) {
-            console.log('Image URI: ' + results[i]);
-        }
-    }, function (error) {
-        console.log('Error: ' + error);
+        alert('Error: ' + error);
     }, {
-        maximumImagesCount: 10,
-        width: 800
+        //公共参数
+        type:3,//1录音  2录制  3选择图片  4选择视频
+        serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+        appid:"",//腾讯云上传appid
+        region:"ap-guangzhou", //腾讯云存储桶地址
+        ticket:"", //用户标识
+        orgId:1,    //机构id
+
+        maximumImagesCount: 1,
+        // outputType: imagePicker.OutputType.BASE64_STRING
+
+        cutType: 2,
+        // cutWidth: 0,
+        // cutHeigth: 0,
+        customMinZoomScale: 0.1,
+        //插件底部顶部背景按钮颜色设置
+        oKButtonTitleColorNormal:"4e8cee",
+        oKButtonTitleColorDisabled:"4e8cee",
+        naviBgColor:"4e8cee",
+        naviTitleColor:"ffffff",
+        barItemTextColor:"ffffff",
+        previewNaviBgColor:"4e8cee",
+        toolbarBgColor:"4e8cee",
+        toolbarTitleColorNormal:"ffffff",
+        toolbarTitleColorDisabled:"ffffff",
+        editNaviBgColor:"4e8cee",
+        editOKButtonTitleColorNormal:"ffffff",
+        editCancelButtonTitleColorNormal:"ffffff",
+        editToolbarBgColor:"4e8cee",
+        editToolbarTitleColorNormal:"ffffff",
+        editToolbarTitleColorDisabled:"ffffff",
     }
 );
 ```
