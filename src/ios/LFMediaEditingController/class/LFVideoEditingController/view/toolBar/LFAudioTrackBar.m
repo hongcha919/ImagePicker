@@ -18,19 +18,21 @@
 {
     LFAudioItem *item = [self new];
     if (item) {
-        item.title = @"Default AudioTrack";
-        item.isOriginal = YES;
+        item.title = [NSBundle LFME_localizedStringForKey:@"_LFME_defaultAudioItem_name"];
         item.isEnable = YES;
     }
     return item;
+}
+
+- (BOOL)isOriginal
+{
+    return self.title == [NSBundle LFME_localizedStringForKey:@"_LFME_defaultAudioItem_name"] && self.url == nil;
 }
 
 @end
 
 
 @interface LFAudioTrackCell : UITableViewCell
-
-
 
 @end
 
@@ -40,7 +42,7 @@
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
-//        self.selectionStyle = UITableViewCellSelectionStyleNone;
+        self.selectionStyle = UITableViewCellSelectionStyleNone;
         self.backgroundColor = [UIColor clearColor];
         self.textLabel.textColor = [UIColor whiteColor];
         self.multipleSelectionBackgroundView = [[UIView alloc] init];
@@ -48,13 +50,21 @@
     return self;
 }
 
+
+
 @end
 
 @interface LFAudioTrackBar () <UITableViewDelegate, UITableViewDataSource, MPMediaPickerControllerDelegate>
 
-@property (nonatomic, strong) NSMutableArray <LFAudioItem *> *m_audioUrls;
+@property (nonatomic, strong) NSMutableArray <NSMutableArray <LFAudioItem *> *> *m_audioUrls;
 
 @property (nonatomic, weak) UITableView *tableView;
+@property (nonatomic, weak) UIButton *allSelectButton;
+@property (nonatomic, weak) UIButton *inverseSelectButton;
+
+@property (nonatomic, strong) UIImage *selectCacheImage;
+@property (nonatomic, strong) UIImage *noSelectCacheImage;
+
 
 @end
 
@@ -81,6 +91,7 @@
     if (self) {
         _customToolbarHeight = 44.f;
         _customTopbarHeight = 64.f;
+        _naviHeight = 44.f;
         if (layoutBlock) {
             layoutBlock(self);
         }
@@ -94,6 +105,8 @@
 {
     self.backgroundColor = [UIColor colorWithWhite:0.2 alpha:1.f];
     _m_audioUrls = [@[] mutableCopy];
+    _selectCacheImage = bundleAudioTrackImageNamed(@"EditImageSelectd.png");
+    _noSelectCacheImage = bundleAudioTrackImageNamed(@"EditImageNoSelect.png");
     
     [self configCustomNaviBar];
     [self configTableView];
@@ -104,7 +117,7 @@
 {
     /** 顶部栏 */
     CGFloat margin = 8;
-    CGFloat size = 44;
+    CGFloat size = _naviHeight;
     UIView *topbar = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.width, _customTopbarHeight)];
     topbar.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleBottomMargin;
     topbar.backgroundColor = [UIColor clearColor];
@@ -154,13 +167,11 @@
         [tableView setContentInsetAdjustmentBehavior:UIScrollViewContentInsetAdjustmentNever];
     }
     tableView.tableFooterView = [[UIView alloc] init];
-    tableView.allowsSelection = NO;
-    tableView.allowsMultipleSelectionDuringEditing = YES;
     tableView.estimatedRowHeight = 0;
     tableView.estimatedSectionHeaderHeight = 0;
     tableView.estimatedSectionFooterHeight = 0;
     
-    tableView.editing = YES;
+//    tableView.editing = YES;
     [self addSubview:tableView];
     self.tableView = tableView;
 }
@@ -175,23 +186,38 @@
     CGSize size = CGSizeMake(44, 44);
     CGFloat margin = 10.f;
     
+    CGFloat marginX = margin;
     /** 左 */
-    UIButton *leftButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    leftButton.frame = (CGRect){{margin,0}, size};
-    [leftButton setImage:bundleEditImageNamed(@"EditImageTrashBtn.png") forState:UIControlStateNormal];
-    [leftButton setImage:bundleEditImageNamed(@"EditImageTrashBtn_HL.png") forState:UIControlStateHighlighted];
-    [leftButton setImage:bundleEditImageNamed(@"EditImageTrashBtn_HL.png") forState:UIControlStateSelected];
-    [leftButton addTarget:self action:@selector(audioTrackTrash) forControlEvents:UIControlEventTouchUpInside];
-    [toolbar addSubview:leftButton];
+    UIButton *allSelectButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    allSelectButton.frame = (CGRect){{marginX,0}, size};
+    [allSelectButton setImage:bundleAudioTrackImageNamed(@"EditImageAllSelect.png") forState:UIControlStateNormal];
+    [allSelectButton setImage:bundleAudioTrackImageNamed(@"EditImageAllSelect_HL.png") forState:UIControlStateHighlighted];
+    [allSelectButton setImage:bundleAudioTrackImageNamed(@"EditImageUnSelect.png") forState:UIControlStateSelected];
+    [allSelectButton setImage:bundleAudioTrackImageNamed(@"EditImageUnSelect_HL.png") forState:UIControlStateSelected|UIControlStateHighlighted];
+    [allSelectButton addTarget:self action:@selector(audioTrackAllSelect:) forControlEvents:UIControlEventTouchUpInside];
+    allSelectButton.enabled = NO;
+    [toolbar addSubview:allSelectButton];
+    _allSelectButton = allSelectButton;
+    marginX += CGRectGetMaxX(allSelectButton.frame) + margin;
+    
+    UIButton *inverseSelectButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    inverseSelectButton.frame = (CGRect){{marginX,0}, size};
+    [inverseSelectButton setImage:bundleAudioTrackImageNamed(@"EditImageInverseSelect.png") forState:UIControlStateNormal];
+    [inverseSelectButton setImage:bundleAudioTrackImageNamed(@"EditImageInverseSelect_HL.png") forState:UIControlStateHighlighted];
+    [inverseSelectButton setImage:bundleAudioTrackImageNamed(@"EditImageInverseSelect_HL.png") forState:UIControlStateSelected];
+    [inverseSelectButton addTarget:self action:@selector(audioTrackInverseSelect) forControlEvents:UIControlEventTouchUpInside];
+    inverseSelectButton.enabled = NO;
+    [toolbar addSubview:inverseSelectButton];
+    _inverseSelectButton = inverseSelectButton;
     
     /** 右 */
-    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    rightButton.frame = (CGRect){{CGRectGetWidth(self.frame)-size.width-margin,0}, size};
-    [rightButton setImage:bundleEditImageNamed(@"EditImageAddBtn.png") forState:UIControlStateNormal];
-    [rightButton setImage:bundleEditImageNamed(@"EditImageAddBtn_HL.png") forState:UIControlStateHighlighted];
-    [rightButton setImage:bundleEditImageNamed(@"EditImageAddBtn_HL.png") forState:UIControlStateSelected];
-    [rightButton addTarget:self action:@selector(audioTrackAdd) forControlEvents:UIControlEventTouchUpInside];
-    [toolbar addSubview:rightButton];
+    UIButton *addButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    addButton.frame = (CGRect){{CGRectGetWidth(self.frame)-size.width-margin,0}, size};
+    [addButton setImage:bundleAudioTrackImageNamed(@"EditImageAddBtn.png") forState:UIControlStateNormal];
+    [addButton setImage:bundleAudioTrackImageNamed(@"EditImageAddBtn_HL.png") forState:UIControlStateHighlighted];
+    [addButton setImage:bundleAudioTrackImageNamed(@"EditImageAddBtn_HL.png") forState:UIControlStateSelected];
+    [addButton addTarget:self action:@selector(audioTrackAdd) forControlEvents:UIControlEventTouchUpInside];
+    [toolbar addSubview:addButton];
     
     [self addSubview:toolbar];
 }
@@ -207,38 +233,66 @@
 
 - (void)finishButtonClick
 {
-    NSMutableArray <LFAudioItem *> *results = [@[] mutableCopy];
-    for (NSInteger i=0; i<self.m_audioUrls.count; i++) {
-        LFAudioItem *item = self.m_audioUrls[i];
-        [results addObject:item];
-    }
-    
     if ([self.delegate respondsToSelector:@selector(lf_audioTrackBar:didFinishAudioUrls:)]) {
-        [self.delegate lf_audioTrackBar:self didFinishAudioUrls:results];
+        [self.delegate lf_audioTrackBar:self didFinishAudioUrls:self.audioUrls];
     }
 }
 
 - (void)audioTrackTrash
 {
     NSMutableArray <LFAudioItem *>*deleteItems = [@[] mutableCopy];
-    for (LFAudioItem *item in self.m_audioUrls) {
-        if (item.isOriginal) {
-            continue;
-        }
-        if (item.isEnable) {
-            [deleteItems addObject:item];
+    for (NSMutableArray *list in self.m_audioUrls) {
+        for (LFAudioItem *item in list) {
+            
+            if (item.isOriginal) {
+                continue;
+            }
+            if (item.isEnable) {
+                [deleteItems addObject:item];
+            }
         }
     }
     if (deleteItems.count) {
-        [self.m_audioUrls removeObjectsInArray:deleteItems];;
+        for (NSMutableArray *list in self.m_audioUrls) {
+            [list removeObjectsInArray:deleteItems];;
+        }
         [self.tableView reloadData];
+        [self checkAllSelectState];
     }
+}
+
+- (void)audioTrackAllSelect:(UIButton *)sender
+{
+    sender.selected = !sender.isSelected;
+    for (NSMutableArray *list in self.m_audioUrls) {
+        for (LFAudioItem *item in list) {
+            if (item.isOriginal) {
+                continue;
+            }
+            item.isEnable = sender.isSelected;
+        }
+    }
+    [self.tableView reloadData];
+}
+
+- (void)audioTrackInverseSelect
+{
+    for (NSMutableArray *list in self.m_audioUrls) {
+        for (LFAudioItem *item in list) {
+            if (item.isOriginal) {
+                continue;
+            }
+            item.isEnable = !item.isEnable;
+        }
+    }
+    [self.tableView reloadData];
+    [self checkAllSelectState];
 }
 
 - (void)audioTrackAdd
 {
     MPMediaPickerController *picker = [[MPMediaPickerController alloc] initWithMediaTypes:MPMediaTypeAnyAudio];
-    picker.prompt = @"请选择需要的歌曲";   //弹出选择播放歌曲的提示
+    picker.prompt = [NSBundle LFME_localizedStringForKey:@"_LFME_MediaPicker_prompt"];   //弹出选择播放歌曲的提示
     picker.showsCloudItems = YES;     //显示为下载的歌曲
     picker.allowsPickingMultipleItems = YES;  //是否允许多选
     picker.delegate = self;
@@ -249,31 +303,51 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     [tableView beginUpdates];
-    LFAudioItem *item = self.m_audioUrls[indexPath.row];
-    item.isEnable = YES;
+    NSMutableArray *list = self.m_audioUrls[indexPath.section];
+    LFAudioItem *item = list[indexPath.row];
+    item.isEnable = !item.isEnable;
     [tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
     [tableView endUpdates];
+    [self checkAllSelectState];
 }
 
-- (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
 {
-    [tableView beginUpdates];
-    LFAudioItem *item = self.m_audioUrls[indexPath.row];
-    item.isEnable = NO;
-    [tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
-    [tableView endUpdates];
+    if (section > 0) {
+        return 44.f;
+    }
+    return 0.f;
+}
+
+- (nullable UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.frame.size.width, 44)];
+    view.backgroundColor = self.backgroundColor;
+    UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(10.f, 0, view.frame.size.width-20.f, view.frame.size.height)];
+    label.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
+    label.numberOfLines = 1.f;
+    label.text = [NSBundle LFME_localizedStringForKey:@"_LFME_AudioTackTitle_prompt"];
+    label.textColor = [UIColor whiteColor];
+    [view addSubview:label];
+    return view;
 }
 
 - (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    return UITableViewCellEditingStyleDelete | UITableViewCellEditingStyleInsert;
+    return UITableViewCellEditingStyleDelete;
 }
 
 
 #pragma mark - UITableViewDataSource
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     return self.m_audioUrls.count;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    NSMutableArray *list = [self.m_audioUrls objectAtIndex:section];
+    return list.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -284,17 +358,27 @@
     if (cell == nil) {
         cell = [[LFAudioTrackCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:audioTrackCellIdentifier];
     }
-    LFAudioItem *item = self.m_audioUrls[indexPath.row];
+    NSMutableArray *list = self.m_audioUrls[indexPath.section];
+    LFAudioItem *item = list[indexPath.row];
     cell.textLabel.text = item.title;
     
     if (item.isEnable) {
-        [tableView selectRowAtIndexPath:indexPath animated:YES scrollPosition:UITableViewScrollPositionNone];
+        [cell.imageView setImage:self.selectCacheImage];
     } else {
-        [tableView deselectRowAtIndexPath:indexPath animated:YES];
+        [cell.imageView setImage:self.noSelectCacheImage];
     }
+    cell.imageView.contentMode = UIViewContentModeScaleAspectFit;
     
     return cell;
 }
+
+//- (nullable NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+//{
+//    if (section > 0) {
+//        return [NSBundle LFME_localizedStringForKey:@"_LFME_AudioTackTitle_prompt"];
+//    }
+//    return nil;
+//}
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -303,7 +387,14 @@
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        [tableView beginUpdates];
+        NSMutableArray *list = self.m_audioUrls[indexPath.section];
+        [list removeObjectAtIndex:indexPath.row];
+        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+        [tableView endUpdates];
+        [self checkAllSelectState];
+    }
 }
 
 #pragma mark - MPMediaPickerControllerDelegate
@@ -313,6 +404,13 @@
 
 - (void)mediaPicker:(MPMediaPickerController *)mediaPicker didPickMediaItems:(MPMediaItemCollection *)mediaItemCollection{
     NSMutableArray *mediaUrls = [@[] mutableCopy];
+    NSMutableArray *list = nil;
+    if (self.m_audioUrls.count > 1) {
+        list = self.m_audioUrls.lastObject;
+    } else {
+        list = [NSMutableArray array];
+        [self.m_audioUrls addObject:list];
+    }
     for (MPMediaItem* mediaItem in [mediaItemCollection items]) {
         NSURL *url = mediaItem.assetURL;
         if (url && [mediaUrls containsObject:url] == NO) {
@@ -321,30 +419,70 @@
             item.title = mediaItem.title;
             item.url = url;
             item.isEnable = YES;
-            [self.m_audioUrls addObject:item];
+            [list addObject:item];
         }
     }
     
     if (mediaUrls.count) {
         [self.tableView reloadData];
+        [self checkAllSelectState];
     }
     
     [mediaPicker dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - getter/setter
-- (NSArray<NSURL *> *)audioUrls
+- (NSArray<LFAudioItem *> *)audioUrls
 {
-    return [self.m_audioUrls copy];
+    NSMutableArray *list = [NSMutableArray arrayWithCapacity:5];
+    for (NSMutableArray *subList in self.m_audioUrls) {
+        [list addObjectsFromArray:subList];
+    }
+    return [list copy];
 }
 
 - (void)setAudioUrls:(NSArray<LFAudioItem *> *)audioUrls
 {
     self.m_audioUrls = [@[] mutableCopy];
-    if (audioUrls.count) {
-        for (LFAudioItem *item in audioUrls) {
-            [self.m_audioUrls addObject:item];
+    
+    NSMutableArray *originalList = [NSMutableArray array];
+    NSMutableArray *customList = [NSMutableArray array];
+    for (LFAudioItem *item in audioUrls) {
+        if (item.isOriginal) {
+            [originalList addObject:item];
+        } else {
+            [customList addObject:item];
         }
+    }
+    if (originalList.count) {
+        [self.m_audioUrls addObject:originalList];
+    }
+    if (customList.count) {
+        [self.m_audioUrls addObject:customList];
+    }
+    [self checkAllSelectState];
+}
+
+#pragma mark - resetAllSelectState
+- (void)checkAllSelectState
+{
+    if (self.m_audioUrls.count > 1) {
+        _allSelectButton.enabled = YES;
+        _inverseSelectButton.enabled = YES;
+        
+        BOOL allEnabel = YES;
+        NSMutableArray *list = self.m_audioUrls.lastObject;
+        for (LFAudioItem *item in list) {
+            if (!item.isEnable) {
+                allEnabel = NO;
+                break;
+            }
+        }
+        _allSelectButton.selected = allEnabel;
+    } else {
+        _allSelectButton.selected = NO;
+        _allSelectButton.enabled = NO;
+        _inverseSelectButton.enabled = NO;
     }
 }
 

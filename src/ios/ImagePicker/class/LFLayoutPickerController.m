@@ -18,7 +18,7 @@
     UIView *_HUDContainer;
     UIActivityIndicatorView *_HUDIndicatorView;
     UILabel *_HUDLabel;
-    
+    UIProgressView *_ProgressView;
     
     UIStatusBarStyle _originStatusBarStyle;
 }
@@ -57,13 +57,10 @@
 //    self.navigationBar.translucent = YES;
     self.delegate = self;
     
-    if (iOS7Later) {
-//        self.automaticallyAdjustsScrollViewInsets = NO;
-        
-        UIImage *backIndicatorImage = bundleImageNamed(@"navigationbar_back_arrow");
-        self.navigationBar.backIndicatorImage = backIndicatorImage;
-        self.navigationBar.backIndicatorTransitionMaskImage = backIndicatorImage;
-    }
+    //        self.automaticallyAdjustsScrollViewInsets = NO;
+    UIImage *backIndicatorImage = bundleImageNamed(@"navigationbar_back_arrow");
+    self.navigationBar.backIndicatorImage = backIndicatorImage;
+    self.navigationBar.backIndicatorTransitionMaskImage = backIndicatorImage;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -130,7 +127,7 @@
 
 - (void)configBarButtonItemAppearance {
     UIBarButtonItem *barItem;
-    if (iOS9Later) {
+    if (@available(iOS 9.0, *)){
         barItem = [UIBarButtonItem appearanceWhenContainedInInstancesOfClasses:@[[LFLayoutPickerController class]]];
     } else {
         barItem = [UIBarButtonItem appearanceWhenContainedIn:[LFLayoutPickerController class], nil];
@@ -162,12 +159,12 @@
 }
 
 - (void)configDefaultImageName {
-    self.takePictureImageName = @"takePicture.png";
-    self.photoSelImageName = @"photo_sel_photoPickerVc.png";
-    self.photoDefImageName = @"photo_def_photoPickerVc.png";
-    self.photoNumberIconImageName = @"photo_number_icon.png";
-    self.photoOriginDefImageName = @"photo_original_def.png";
-    self.photoOriginSelImageName = @"photo_original_sel.png";
+    self.takePictureImageName = @"takePicture";
+    self.photoSelImageName = @"photo_sel_photoPickerVc";
+    self.photoDefImageName = @"photo_def_photoPickerVc";
+    self.photoNumberIconImageName = @"photo_number_icon";
+    self.photoOriginDefImageName = @"photo_original_def";
+    self.photoOriginSelImageName = @"photo_original_sel";
 }
 
 - (void)configDefaultBtnTitle {
@@ -180,6 +177,64 @@
     self.processHintStr = @"正在处理...";
 }
 
+#pragma mark - getter custom text
+- (NSString *)doneBtnTitleStr
+{
+    if (_doneBtnTitleStr) {
+        return _doneBtnTitleStr;
+    }
+    return [NSBundle lf_localizedStringForKey:@"_doneBtnTitleStr"];
+}
+
+- (NSString *)cancelBtnTitleStr
+{
+    if (_cancelBtnTitleStr) {
+        return _cancelBtnTitleStr;
+    }
+    return [NSBundle lf_localizedStringForKey:@"_cancelBtnTitleStr"];
+}
+
+- (NSString *)previewBtnTitleStr
+{
+    if (_previewBtnTitleStr) {
+        return _previewBtnTitleStr;
+    }
+    return [NSBundle lf_localizedStringForKey:@"_previewBtnTitleStr"];
+}
+
+- (NSString *)editBtnTitleStr
+{
+    if (_editBtnTitleStr) {
+        return _editBtnTitleStr;
+    }
+    return [NSBundle lf_localizedStringForKey:@"_editBtnTitleStr"];
+}
+
+- (NSString *)fullImageBtnTitleStr
+{
+    if (_fullImageBtnTitleStr) {
+        return _fullImageBtnTitleStr;
+    }
+    return [NSBundle lf_localizedStringForKey:@"_fullImageBtnTitleStr"];
+}
+
+- (NSString *)settingBtnTitleStr
+{
+    if (_settingBtnTitleStr) {
+        return _settingBtnTitleStr;
+    }
+    return [NSBundle lf_localizedStringForKey:@"_settingBtnTitleStr"];
+}
+
+- (NSString *)processHintStr
+{
+    if (_processHintStr) {
+        return _processHintStr;
+    }
+    return [NSBundle lf_localizedStringForKey:@"_processHintStr"];
+}
+
+
 - (void)showAlertWithTitle:(NSString *)title {
     [self showAlertWithTitle:title complete:nil];
 }
@@ -191,12 +246,12 @@
 
 - (void)showAlertWithTitle:(NSString *)title message:(NSString *)message complete:(void (^)(void))complete
 {
-    [self showAlertWithTitle:title cancelTitle:@"确定" message:message complete:complete];
+    [self showAlertWithTitle:title cancelTitle:[NSBundle lf_localizedStringForKey:@"_alertViewCancelTitle"] message:message complete:complete];
 }
 
 - (void)showAlertWithTitle:(NSString *)title cancelTitle:(NSString *)cancelTitle message:(NSString *)message complete:(void (^)(void))complete
 {
-    if (iOS8Later) {
+    if (@available(iOS 8.0, *)){
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
         [alertController addAction:[UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             if (complete) {
@@ -205,7 +260,7 @@
         }]];
         [self presentViewController:alertController animated:YES completion:nil];
     } else {
-        [[[UIAlertView alloc] initWithTitle:title message:message cancelButtonTitle:cancelTitle otherButtonTitles:nil block:^(UIAlertView *alertView, NSInteger buttonIndex) {
+        [[[UIAlertView alloc] lf_initWithTitle:title message:message cancelButtonTitle:cancelTitle otherButtonTitles:nil block:^(UIAlertView *alertView, NSInteger buttonIndex) {
             if (complete) {
                 complete();
             }
@@ -213,7 +268,11 @@
     }
 }
 
-- (void)showProgressHUDText:(NSString *)text isTop:(BOOL)isTop
+- (void)showProgressHUDText:(NSString *)text isTop:(BOOL)isTop {
+    [self showProgressHUDText:text isTop:isTop needProcess:NO];
+}
+
+- (void)showProgressHUDText:(NSString *)text isTop:(BOOL)isTop needProcess:(BOOL)needProcess
 {
     [self hideProgressHUD];
     
@@ -242,7 +301,14 @@
         [_HUDContainer addSubview:_HUDIndicatorView];
         [_progressHUD addSubview:_HUDContainer];
     }
-    
+    if (needProcess) {
+        _HUDContainer.frame = CGRectMake(([[UIScreen mainScreen] bounds].size.width - 120) / 2, ([[UIScreen mainScreen] bounds].size.height - 90) / 2, 120.f, 100.f);
+        if (!_ProgressView) {
+            _ProgressView = [[UIProgressView alloc] initWithFrame:CGRectMake(10.f, CGRectGetMaxY(_HUDLabel.frame), CGRectGetWidth(_HUDContainer.frame)-20.f, 2.5f)];
+            [_HUDContainer addSubview:_ProgressView];
+        }
+    }
+
     _HUDLabel.text = text ? text : self.processHintStr;
     
     [_HUDIndicatorView startAnimating];
@@ -265,7 +331,16 @@
     if (_progressHUD) {
         [_HUDIndicatorView stopAnimating];
         [_progressHUD removeFromSuperview];
+        [_ProgressView removeFromSuperview];
     }
+}
+
+- (void)showNeedProgressHUD {
+    [self showProgressHUDText:nil isTop:NO needProcess:YES];
+}
+
+- (void)setProcess:(CGFloat)process {
+    [_ProgressView setProgress:process animated:YES];
 }
 
 #pragma mark - UINavigationController Delegate Methods
@@ -274,10 +349,8 @@
     if([viewController isKindOfClass:[LFBaseViewController class]])
     {
         /** 处理推送VC传参 */
-        LFBaseViewController *targetVC = (LFBaseViewController *)viewController;
+        LFBaseViewController *targetVC = (LFBaseViewController *)viewController;        
         [self setNavigationBarHidden:targetVC.isHiddenNavBar animated:animated];
-    } else if ([viewController respondsToSelector:@selector(isHiddenNavBar)]) {
-        [self setNavigationBarHidden:[viewController performSelector:@selector(isHiddenNavBar)] animated:animated];
     }
 }
 

@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "NSBundle+LFMediaEditing.h"
 
 #ifndef LFMediaEditingHeader_h
 #define LFMediaEditingHeader_h
@@ -19,14 +20,16 @@
 #define isiPhone (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
 #define isiPad (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
 
-#define bundleEditImageNamed(name) [UIImage imageNamed:[NSString stringWithFormat:@"%@/%@", kEditPath, name]]
-#define bundleStickerImageNamed(name) [UIImage imageNamed:[NSString stringWithFormat:@"%@/%@", kStickersPath, name]]
+#define bundleEditImageNamed(name) [NSBundle LFME_imageNamed:name]
+#define bundleStickerImageNamed(name) [NSBundle LFME_stickersImageNamed:name]
+#define bundleAudioTrackImageNamed(name) [NSBundle LFME_audioTrackImageNamed:name]
 
 #define kCustomTopbarHeight CGRectGetHeight(self.navigationController.navigationBar.frame) + (CGRectGetWidth([UIScreen mainScreen].bounds) < CGRectGetHeight([UIScreen mainScreen].bounds) ? 20 : 0)
-#define kCustomTopbarHeight_iOS11 CGRectGetHeight(self.navigationController.navigationBar.frame) + (self.view.safeAreaInsets.top > 0 ?: (CGRectGetWidth([UIScreen mainScreen].bounds) < CGRectGetHeight([UIScreen mainScreen].bounds) ? 20 : 0))
+#define kCustomTopbarHeight_iOS11 CGRectGetHeight(self.navigationController.navigationBar.frame) + (self.navigationController.view.safeAreaInsets.top > 0 ? self.navigationController.view.safeAreaInsets.top : (CGRectGetWidth([UIScreen mainScreen].bounds) < CGRectGetHeight([UIScreen mainScreen].bounds) ? 20 : 0))
 
 
-#define kSliderColors @[[UIColor colorWithRed:246.f/255.f green:246.f/255.f blue:246.f/255.f alpha:1.f]/*白色*/\
+#define kSliderColors @[[UIColor whiteColor]/*白色*/\
+, [UIColor blackColor]/*黑色*/\
 , [UIColor colorWithRed:235.f/255.f green:51.f/255.f blue:16.f/255.f alpha:1.f]/*红色*/\
 , [UIColor colorWithRed:245.f/255.f green:181.f/255.f blue:71.f/255.f alpha:1.f]/*浅黄色*/\
 , [UIColor colorWithRed:248.f/255.f green:229.f/255.f blue:7.f/255.f alpha:1.f]/*黄色*/\
@@ -41,9 +44,9 @@
 , [UIColor colorWithRed:236.f/255.f green:36.f/255.f blue:179.f/255.f alpha:1.f]/*粉红色*/\
 ]
 
-/** 编辑资源路径 */
-extern NSString *const kEditPath;
-/** 贴图资源路径 */
-extern NSString *const kStickersPath;
+///** 编辑资源路径 */
+//NSString *const kEditPath = @"LFMediaEditingController.bundle";
+///** 贴图资源路径 */
+//NSString *const kStickersPath = @"LFMediaEditingController.bundle/stickers";
 
 #endif /* LFMediaEditingHeader_h */

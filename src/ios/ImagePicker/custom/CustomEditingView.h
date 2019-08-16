@@ -29,6 +29,9 @@
 
 @property (nonatomic, assign) float customMinZoomScale;
 
+/** 是否允许编辑 默认NO */
+@property (nonatomic, assign) BOOL allowEditing;
+
 - (void)setIsClipping:(BOOL)isClipping animated:(BOOL)animated;
 - (void)setIsClipping:(BOOL)isClipping animated:(BOOL)animated whRatio:(CGFloat)radio;
 

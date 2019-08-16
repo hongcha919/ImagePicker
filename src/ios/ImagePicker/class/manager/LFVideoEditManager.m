@@ -6,6 +6,7 @@
 //  Copyright © 2017年 LamTsanFeng. All rights reserved.
 //
 
+//#ifdef LF_MEDIAEDIT
 #import "LFVideoEditManager.h"
 #import "LFImagePickerHeader.h"
 #import "LFVideoEdit.h"
@@ -39,7 +40,7 @@ static LFVideoEditManager *manager;
 /** 设置编辑对象 */
 - (void)setVideoEdit:(LFVideoEdit *)obj forAsset:(LFAsset *)asset
 {
-    __weak LFVideoEditManager *weakSelf = self;
+    __weak __typeof__(self) weakSelf = self;
     if (asset.asset) {
         if (asset.name.length) {
             if (obj) {
@@ -63,7 +64,7 @@ static LFVideoEditManager *manager;
 /** 获取编辑对象 */
 - (LFVideoEdit *)videoEditForAsset:(LFAsset *)asset
 {
-    __weak LFVideoEditManager *weakSelf = self;
+    __weak __typeof__(self) weakSelf = self;
     __block LFVideoEdit *videoEdit = nil;
     if (asset.asset) {
         if (asset.name.length) {
@@ -84,11 +85,16 @@ static LFVideoEditManager *manager;
  通过asset解析视频
 
  @param asset LFAsset
+ @param presetName 压缩预设名称 nil则默认为AVAssetExportPresetMediumQuality
  @param completion 回调
  */
 - (void)getVideoWithAsset:(LFAsset *)asset
+               presetName:(NSString *)presetName
                completion:(void (^)(LFResultVideo *resultVideo))completion
 {
+    if (presetName.length == 0) {
+        presetName = AVAssetExportPresetMediumQuality;
+    }
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
         LFVideoEdit *videoEdit = [self videoEditForAsset:asset];
@@ -145,10 +151,10 @@ static LFVideoEditManager *manager;
         
         NSString *videoPath = [[LFAssetManager CacheVideoPath] stringByAppendingPathComponent:videoName];
         AVAsset *av_asset = [AVURLAsset assetWithURL:videoEdit.editFinalURL];
-        [LF_VideoUtils encodeVideoWithAsset:av_asset outPath:videoPath complete:^(BOOL isSuccess, NSError *error) {
+        [LF_VideoUtils encodeVideoWithAsset:av_asset outPath:videoPath presetName:presetName complete:^(BOOL isSuccess, NSError *error) {
             if (VideoResultComplete) VideoResultComplete(videoPath, videoName);
         }];
     });
 }
 @end
-
+//#endif

@@ -17,6 +17,13 @@
 /** 原图 */
 @property (nonatomic, readonly) UIImage *image;
 @property (nonatomic, readonly) NSUInteger level;
+/** 正在绘画 */
+@property (nonatomic, readonly) BOOL isDrawing;
+
+/** 马赛克大小 */
+@property (nonatomic, assign) CGFloat squareWidth;
+/** 画笔大小 */
+@property (nonatomic, assign) CGSize paintSize;
 
 /** 数据 */
 @property (nonatomic, strong) NSDictionary *data;

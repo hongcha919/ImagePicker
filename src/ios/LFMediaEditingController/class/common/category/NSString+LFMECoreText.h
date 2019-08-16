@@ -79,4 +79,10 @@
  */
 - (void)LFME_drawInContext:(CGContextRef)context withPosition:(CGPoint)p andFont:(UIFont *)font andTextColor:(UIColor *)color andHeight:(float)height andWidth:(float)width linespace:(float)linespace lineBreakMode:(CTLineBreakMode)lineBreakMode;
 
+#pragma mark =========== 空值字符串默认显示为nullStr ===========
++(NSString*) getSafeStrWithStr:(id)str showNull:(NSString*)nullStr;
+
+//生成随机uuid
++ (NSString *)uuidString;
+
 @end

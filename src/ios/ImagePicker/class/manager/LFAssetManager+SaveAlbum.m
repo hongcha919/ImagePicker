@@ -16,63 +16,72 @@
 
 #pragma mark - 创建相册
 - (void)createCustomAlbumWithTitle:(NSString *)title complete:(void (^)(PHAssetCollection *result))complete faile:(void (^)(NSError *error))faile{
-    if (title.length == 0) {
-        if (complete) complete(nil);
-    }else{
-        dispatch_globalQueue_async_safe(^{
-            // 是否存在相册 如果已经有了 就不再创建
-            PHFetchResult <PHAssetCollection *> *results = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
-            BOOL haveHDRGroup = NO;
-            NSError *error = nil;
-            PHAssetCollection *createCollection = nil;
-            for (PHAssetCollection *collection in results) {
-                if ([collection.localizedTitle isEqualToString:title]) {
-                    /** 已经存在了，不需要创建了 */
-                    haveHDRGroup = YES;
-                    createCollection = collection;
-                    break;
+    if ([self authorizationStatusAuthorized]) {
+        if (title.length == 0) {
+            if (complete) complete(nil);
+        }else{
+            dispatch_globalQueue_async_safe(^{
+                // 是否存在相册 如果已经有了 就不再创建
+                PHFetchResult <PHAssetCollection *> *results = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
+                BOOL haveHDRGroup = NO;
+                NSError *error = nil;
+                PHAssetCollection *createCollection = nil;
+                for (PHAssetCollection *collection in results) {
+                    if ([collection.localizedTitle isEqualToString:title]) {
+                        /** 已经存在了，不需要创建了 */
+                        haveHDRGroup = YES;
+                        createCollection = collection;
+                        break;
+                    }
                 }
-            }
-            if (haveHDRGroup) {
-                NSLog(@"Already exists");
-                dispatch_main_async_safe(^{
-                    if (complete) complete(createCollection);
-                });
-            }else{
-                __block NSString *createdCustomAssetCollectionIdentifier = nil;
-                /**
-                 * 注意：这个方法只是告诉 photos 我要创建一个相册，并没有真的创建
-                 *      必须等到 performChangesAndWait block 执行完毕后才会
-                 *      真的创建相册。
-                 */
-                [[PHPhotoLibrary sharedPhotoLibrary] performChangesAndWait:^{
-                    PHAssetCollectionChangeRequest *collectionChangeRequest = [PHAssetCollectionChangeRequest creationRequestForAssetCollectionWithTitle:title];
-                    /**
-                     * collectionChangeRequest 即使我们告诉 photos 要创建相册，但是此时还没有
-                     * 创建相册，因此现在我们并不能拿到所创建的相册，我们的需求是：将图片保存到
-                     * 自定义的相册中，因此我们需要拿到自己创建的相册，从头文件可以看出，collectionChangeRequest
-                     * 中有一个占位相册，placeholderForCreatedAssetCollection ，这个占位相册
-                     * 虽然不是我们所创建的，但是其 identifier 和我们所创建的自定义相册的 identifier
-                     * 是相同的。所以想要拿到我们自定义的相册，必须保存这个 identifier，等 photos app
-                     * 创建完成后通过 identifier 来拿到我们自定义的相册
-                     */
-                    createdCustomAssetCollectionIdentifier = collectionChangeRequest.placeholderForCreatedAssetCollection.localIdentifier;
-                } error:&error];
-                if (error) {
-                    NSLog(@"Album Failed: %@",title);
-                    dispatch_main_async_safe(^{
-                        if (faile) faile(error);
-                    });
-                }else{
-                    /** 获取创建成功的相册 */
-                    createCollection = [PHAssetCollection fetchAssetCollectionsWithLocalIdentifiers:@[createdCustomAssetCollectionIdentifier] options:nil].firstObject;
-                    NSLog(@"Album Created: %@",title);
+                if (haveHDRGroup) {
+                    NSLog(@"Already exists");
                     dispatch_main_async_safe(^{
                         if (complete) complete(createCollection);
                     });
+                }else{
+                    __block NSString *createdCustomAssetCollectionIdentifier = nil;
+                    /**
+                     * 注意：这个方法只是告诉 photos 我要创建一个相册，并没有真的创建
+                     *      必须等到 performChangesAndWait block 执行完毕后才会
+                     *      真的创建相册。
+                     */
+                    [[PHPhotoLibrary sharedPhotoLibrary] performChangesAndWait:^{
+                        PHAssetCollectionChangeRequest *collectionChangeRequest = [PHAssetCollectionChangeRequest creationRequestForAssetCollectionWithTitle:title];
+                        /**
+                         * collectionChangeRequest 即使我们告诉 photos 要创建相册，但是此时还没有
+                         * 创建相册，因此现在我们并不能拿到所创建的相册，我们的需求是：将图片保存到
+                         * 自定义的相册中，因此我们需要拿到自己创建的相册，从头文件可以看出，collectionChangeRequest
+                         * 中有一个占位相册，placeholderForCreatedAssetCollection ，这个占位相册
+                         * 虽然不是我们所创建的，但是其 identifier 和我们所创建的自定义相册的 identifier
+                         * 是相同的。所以想要拿到我们自定义的相册，必须保存这个 identifier，等 photos app
+                         * 创建完成后通过 identifier 来拿到我们自定义的相册
+                         */
+                        createdCustomAssetCollectionIdentifier = collectionChangeRequest.placeholderForCreatedAssetCollection.localIdentifier;
+                    } error:&error];
+                    if (error) {
+                        NSLog(@"Album Failed: %@",title);
+                        dispatch_main_async_safe(^{
+                            if (faile) faile(error);
+                        });
+                    }else{
+                        if (createdCustomAssetCollectionIdentifier) {
+                            /** 获取创建成功的相册 */
+                            createCollection = [PHAssetCollection fetchAssetCollectionsWithLocalIdentifiers:@[createdCustomAssetCollectionIdentifier] options:nil].firstObject;
+                            NSLog(@"Album Created: %@",title);
+                            dispatch_main_async_safe(^{
+                                if (complete) complete(createCollection);
+                            });
+                        } else {
+                            NSLog(@"Album Failed: %@",title);
+                            dispatch_main_async_safe(^{
+                                if (faile) faile(error);
+                            });
+                        }
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 }
 
@@ -89,7 +98,7 @@
 - (void)baseSaveImageToCustomPhotosAlbumWithTitle:(NSString *)title datas:(NSArray <id /* NSData/UIImage */>*)datas complete:(void (^)(NSArray <id /* PHAsset/ALAsset */>*assets ,NSError *error))complete
 {
     if ([self authorizationStatusAuthorized]) {
-        if (iOS8Later) {
+        if (@available(iOS 8.0, *)){
             [self createCustomAlbumWithTitle:title complete:^(PHAssetCollection *result) {
                 [self saveToAlbumIOS8LaterWithImages:datas customAlbum:result completionBlock:^(NSArray<PHAsset *> *assets) {
                     if (complete) complete(assets, nil);
@@ -108,7 +117,7 @@
             }];
         }
     } else {
-        NSError *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey:@"Do not have permission to access the album"}];
+        NSError *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey:[NSBundle lf_localizedStringForKey:@"_LFAssetManager_SaveAlbum_notpermissionError"]}];
         if (complete) complete(nil, error);
     }
 }
@@ -127,7 +136,7 @@
         for (id data in datas) {
             PHAssetChangeRequest *req = nil;
             if ([data isKindOfClass:[NSData class]]) {
-                if (iOS9Later) {
+                if (@available(iOS 9.0, *)){
                     PHAssetResourceCreationOptions *options = [[PHAssetResourceCreationOptions alloc] init];
                     req = [PHAssetCreationRequest creationRequestForAsset];
                     [(PHAssetCreationRequest *)req addResourceWithType:PHAssetResourceTypePhoto data:data options:options];
@@ -170,7 +179,7 @@
             }
         }
         if (result == nil) {
-            nextError = [NSError errorWithDomain:@"SaveVideoError" code:-1000 userInfo:@{NSLocalizedDescriptionKey:@"SaveVideoError"}];
+            nextError = [NSError errorWithDomain:@"SaveToAlbumError" code:-1 userInfo:@{NSLocalizedDescriptionKey:[NSBundle lf_localizedStringForKey:@"_LFAssetManager_SaveAlbum_saveVideoError"]}];
         }
         
         if (nextError) {
@@ -291,10 +300,10 @@
 
 
 #pragma mark - Save the video to a custom album
-- (void)saveVideoToCustomPhotosAlbumWithTitle:(NSString *)title videoURLs:(NSArray <NSURL *>*)videoURLs complete:(void(^)(id asset, NSError *error))complete
+- (void)saveVideoToCustomPhotosAlbumWithTitle:(NSString *)title videoURLs:(NSArray <NSURL *>*)videoURLs complete:(void(^)(NSArray <id /* PHAsset/ALAsset */>*assets, NSError *error))complete
 {
     if ([self authorizationStatusAuthorized]) {
-        if (iOS8Later) {
+        if (@available(iOS 8.0, *)){
             [self createCustomAlbumWithTitle:title complete:^(PHAssetCollection *result) {
                 [self saveToAlbumIOS8LaterWithVideoURLs:videoURLs customAlbum:result completionBlock:^(NSArray<PHAsset *> *assets) {
                     if (complete) complete(assets, nil);
@@ -313,7 +322,7 @@
             }];
         }
     } else {
-        NSError *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey:@"Do not have permission to access the album"}];
+        NSError *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey:[NSBundle lf_localizedStringForKey:@"_LFAssetManager_SaveAlbum_notpermissionError"]}];
         if (complete) complete(nil, error);
     }
 }
@@ -363,7 +372,7 @@
                 }
             }
             if (result == nil) {
-                nextError = [NSError errorWithDomain:@"SaveVideoError" code:-1000 userInfo:@{NSLocalizedDescriptionKey:@"SaveVideoError"}];
+                nextError = [NSError errorWithDomain:@"SaveToAlbumError" code:-1 userInfo:@{NSLocalizedDescriptionKey:[NSBundle lf_localizedStringForKey:@"_LFAssetManager_SaveAlbum_saveVideoError"]}];
             }
             if (nextError) {
                 NSLog(@"Save failed");
@@ -383,5 +392,74 @@
         }
     });
 }
+
+- (void)deleteAssets:(NSArray <id /* PHAsset/ALAsset */ > *)assets complete:(void (^)(NSError *error))complete
+{
+    if (@available(iOS 8.0, *)){
+        [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+            [PHAssetChangeRequest deleteAssets:assets];
+        } completionHandler:^(BOOL success, NSError *error) {
+            dispatch_main_async_safe(^{
+                NSLog(@"deleteAssets Error: %@", error);
+                if (complete) {
+                    complete(error);
+                }
+            });
+        }];
+    } else {
+        for (ALAsset *result in assets) {
+            if ([[result valueForProperty:ALAssetPropertyType] isEqualToString:ALAssetTypeVideo]) {
+                [result setVideoAtPath:nil completionBlock:^(NSURL *assetURL, NSError *error) {
+                    dispatch_main_async_safe(^{
+                        NSLog(@"asset url(%@) should be delete . Error:%@ ", assetURL, error);
+                        if (complete) {
+                            complete(error);
+                        }
+                    });
+                }];
+            } else {
+                [result setImageData:nil metadata:nil completionBlock:^(NSURL *assetURL, NSError *error) {
+                    dispatch_main_async_safe(^{
+                        NSLog(@"asset url(%@) should be delete . Error:%@ ", assetURL, error);
+                        if (complete) {
+                            complete(error);
+                        }
+                    });
+                }];
+            }
+        }
+    }
+}
+
+- (void)deleteAssetCollections:(NSArray <PHAssetCollection *> *)collections complete:(void (^)(NSError *error))complete
+{
+    [self deleteAssetCollections:collections deleteAssets:NO complete:complete];
+}
+
+- (void)deleteAssetCollections:(NSArray <PHAssetCollection *> *)collections deleteAssets:(BOOL)deleteAssets complete:(void (^)(NSError *error))complete
+{
+    if (@available(iOS 8.0, *)){
+        [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+            if (deleteAssets) {
+                PHFetchOptions *option = [[PHFetchOptions alloc] init];
+                for (PHAssetCollection *collection in collections) {
+                    PHFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:collection options:option];
+                    NSIndexSet *indexSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, fetchResult.count)];
+                    NSArray *results = [fetchResult objectsAtIndexes:indexSet];
+                    [PHAssetChangeRequest deleteAssets:results];
+                }
+            }
+            [PHAssetCollectionChangeRequest deleteAssetCollections:collections];
+        } completionHandler:^(BOOL success, NSError *error) {
+            dispatch_main_async_safe(^{
+                NSLog(@"deleteAssetCollections Error: %@", error);
+                if (complete) {
+                    complete(error);
+                }
+            });
+        }];
+    }
+}
+
 
 @end

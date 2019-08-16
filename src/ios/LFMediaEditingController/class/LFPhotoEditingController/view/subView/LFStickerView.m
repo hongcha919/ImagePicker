@@ -50,6 +50,43 @@ NSString *const kLFStickerViewData_movingView_rotation = @"LFStickerViewData_mov
     self.clipsToBounds = YES;
 }
 
+/** 获取选中贴图的内容 */
+- (LFStickerItem *)getSelectStickerItem
+{
+    return self.selectMovingView.item;
+}
+
+/** 更改选中贴图内容 */
+- (void)changeSelectStickerItem:(LFStickerItem *)item
+{
+    self.selectMovingView.item = item;
+}
+
+- (void)createStickerItem:(LFStickerItem *)item
+{
+    LFMovingView *movingView = [self createBaseMovingView:item active:YES];
+    
+    CGFloat ratio = MIN( (0.8 * self.frame.size.width) / movingView.frame.size.width, (0.8 * self.frame.size.height) / movingView.frame.size.height);
+    CGFloat scale = ratio/self.screenScale;
+    
+    [movingView setScale:scale];
+    
+    self.selectMovingView = movingView;
+}
+
+
+- (void)setScreenScale:(CGFloat)screenScale
+{
+    if (screenScale > 0) {
+        _screenScale = screenScale;
+        for (LFMovingView *subView in self.subviews) {
+            if ([subView isKindOfClass:[LFMovingView class]]) {
+                subView.screenScale = screenScale;
+            }
+        }
+    }
+}
+
 #pragma mark - 解除响应事件
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
@@ -57,7 +94,7 @@ NSString *const kLFStickerViewData_movingView_rotation = @"LFStickerViewData_mov
     return (view == self ? nil : view);
 }
 
-- (void)setTapEnded:(void (^)(BOOL))tapEnded
+- (void)setTapEnded:(void (^)(LFStickerItem *, BOOL))tapEnded
 {
     _tapEnded = tapEnded;
     for (LFMovingView *subView in self.subviews) {
@@ -66,7 +103,7 @@ NSString *const kLFStickerViewData_movingView_rotation = @"LFStickerViewData_mov
                 __weak LFStickerView *weakSelf = self;
                 [subView setTapEnded:^(LFMovingView *movingView, UIView *view, BOOL isActive) {
                     weakSelf.selectMovingView = movingView;
-                    weakSelf.tapEnded(isActive);
+                    weakSelf.tapEnded(movingView.item,isActive);
                 }];
             } else {
                 [subView setTapEnded:nil];
@@ -163,7 +200,7 @@ NSString *const kLFStickerViewData_movingView_rotation = @"LFStickerViewData_mov
         __weak LFStickerView * weakSelf = self;
         [movingView setTapEnded:^(LFMovingView *movingView, UIView *view, BOOL isActive) {
             weakSelf.selectMovingView = movingView;
-            weakSelf.tapEnded(isActive);
+            weakSelf.tapEnded(movingView.item,isActive);
         }];
     }
     if (self.moveCenter) {

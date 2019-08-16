@@ -13,11 +13,12 @@
 #import "UIView+LFFrame.h"
 #import "UIView+LFAnimate.h"
 #import "UIImage+LFCommon.h"
-#import "LFPhotoEditManager.h"
-
+//#ifdef LF_MEDIAEDIT
 #import "LFPhotoEdit.h"
-#import "LFVideoEditManager.h"
+#import "LFPhotoEditManager.h"
 #import "LFVideoEdit.h"
+#import "LFVideoEditManager.h"
+//#endif
 
 #pragma mark - /// 宫格图片视图
 
@@ -75,7 +76,7 @@
     UIImageView *editMaskImageView = [[UIImageView alloc] init];
     CGRect frame = CGRectMake(5, 5, 13.5 + kAdditionalSize, 11 + kAdditionalSize);
     editMaskImageView.frame = frame;
-    [editMaskImageView setImage:bundleImageNamed(@"contacts_add_myablum.png")];
+    [editMaskImageView setImage:bundleImageNamed(@"contacts_add_myablum")];
     editMaskImageView.contentMode = UIViewContentModeScaleAspectFit;
     [self.contentView addSubview:editMaskImageView];
     _editMaskImageView = editMaskImageView;
@@ -86,7 +87,6 @@
     selectPhotoButton.frame = CGRectMake(self.width - sep - kAdditionalSize, 0, sep + kAdditionalSize, sep + kAdditionalSize);
     [selectPhotoButton addTarget:self action:@selector(selectPhotoButtonClick:) forControlEvents:UIControlEventTouchUpInside];
     [self.contentView addSubview:selectPhotoButton];
-//    selectPhotoButton.backgroundColor = [UIColor redColor];
     _selectPhotoButton = selectPhotoButton;
     
     UIImageView *selectImageView = [[UIImageView alloc] init];
@@ -109,25 +109,33 @@
 
     BOOL hiddenEditMask = YES;
     if (self.model.type == LFAssetMediaTypePhoto) {
+//#ifdef LF_MEDIAEDIT
         /** 优先显示编辑图片 */
         LFPhotoEdit *photoEdit = [[LFPhotoEditManager manager] photoEditForAsset:model];
         if (photoEdit.editPosterImage) {
             self.imageView.image = photoEdit.editPosterImage;
             hiddenEditMask = NO;
         } else {
+//#endif
             [self getAssetImage:model];
+//#ifdef LF_MEDIAEDIT
         }
+//#endif
         /** 显示编辑标记 */
         self.editMaskImageView.hidden = hiddenEditMask;
     } else if (self.model.type == LFAssetMediaTypeVideo) {
+//#ifdef LF_MEDIAEDIT
         /** 优先显示编辑图片 */
         LFVideoEdit *videoEdit = [[LFVideoEditManager manager] videoEditForAsset:model];
         if (videoEdit.editPosterImage) {
             self.imageView.image = videoEdit.editPosterImage;
             hiddenEditMask = NO;
         } else {
+//#endif
             [self getAssetImage:model];
+//#ifdef LF_MEDIAEDIT
         }
+//#endif
         /** 显示编辑标记 */
         self.editMaskImageView.hidden = hiddenEditMask;
     }
@@ -138,9 +146,9 @@
 
 - (void)getAssetImage:(LFAsset *)model
 {
-    if (model.previewImage) { /** 显示自定义图片 */
-        self.imageView.image = model.previewImage;
-    }  else {
+    if (model.thumbnailImage) { /** 显示自定义图片 */
+        self.imageView.image = model.thumbnailImage;
+    } else {
         [[LFAssetManager manager] getPhotoWithAsset:model.asset photoWidth:self.width completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
             if ([model.asset isEqual:self.model.asset]) {
                 self.imageView.image = photo;
@@ -163,12 +171,12 @@
         
         if (self.displayGif && self.model.subType == LFAssetSubMediaTypeGIF) {
             _videoImgView.hidden = YES;
-            self.timeLength.text = @"GIF";
+            self.timeLength.text = NSLocalizedString(@"GIF", nil);
             self.timeLength.textAlignment = NSTextAlignmentRight;
             _bottomView.hidden = NO;
         } else if (self.displayLivePhoto && self.model.subType == LFAssetSubMediaTypeLivePhoto) {
             _videoImgView.hidden = YES;
-            self.timeLength.text = @"Live";
+            self.timeLength.text = NSLocalizedString(@"Live", nil);
             self.timeLength.textAlignment = NSTextAlignmentRight;
             _bottomView.hidden = NO;
         } else if (self.displayPhotoName) {
@@ -179,12 +187,16 @@
         }
     } else if (self.model.type == LFAssetMediaTypeVideo) {
         self.videoImgView.hidden = NO;
+//#ifdef LF_MEDIAEDIT
         LFVideoEdit *videoEdit = [[LFVideoEditManager manager] videoEditForAsset:self.model];
         if (videoEdit.editPosterImage) {
-            self.timeLength.text = [self getNewTimeFromDurationSecond:[[NSString stringWithFormat:@"%0.0f",videoEdit.duration] integerValue]];
+            self.timeLength.text = [self getNewTimeFromDurationSecond:lf_videoDuration(videoEdit.duration)];
         } else {
-            self.timeLength.text = [self getNewTimeFromDurationSecond:[[NSString stringWithFormat:@"%0.0f",self.model.duration] integerValue]];
+//#endif
+            self.timeLength.text = [self getNewTimeFromDurationSecond:lf_videoDuration(self.model.duration)];
+//#ifdef LF_MEDIAEDIT
         }
+//#endif
         self.timeLength.textAlignment = NSTextAlignmentRight;
         _bottomView.hidden = NO;
     }
@@ -212,10 +224,22 @@
 {
     _onlySelected = onlySelected;
     if (onlySelected) {
+        _onlyClick = NO;
+        _selectPhotoButton.hidden = NO;
+        _selectImageView.hidden = NO;
         _selectPhotoButton.frame = self.bounds;
     } else {
         float sep = 45;
         _selectPhotoButton.frame = CGRectMake(self.width - sep - kAdditionalSize, 0, sep + kAdditionalSize, sep + kAdditionalSize);
+    }
+}
+
+- (void)setOnlyClick:(BOOL)onlyClick
+{
+    if (!self.onlySelected) {
+        _onlyClick = onlyClick;
+        _selectPhotoButton.hidden = onlyClick;
+        _selectImageView.hidden = onlyClick;
     }
 }
 
@@ -227,7 +251,7 @@
 
 - (void)selectPhotoButtonClick:(UIButton *)sender {
     if (self.didSelectPhotoBlock) {
-        __weak LFAssetCell *weakSelf = self;
+        __weak __typeof__(self) weakSelf = self;
         self.didSelectPhotoBlock(!sender.selected, self.model, weakSelf);
     }
 }
@@ -247,12 +271,6 @@
         [UIView showOscillatoryAnimationWithLayer:_selectImageView.layer type:OscillatoryAnimationToBigger];
     }
 }
-    
-- (void)setSelectButtonHidden:(BOOL)hidden
-{
-    _selectPhotoButton.hidden = hidden;
-    self.selectImageView.hidden = hidden;
-}
 
 #pragma mark - Lazy load
 - (UIImageView *)videoImgView {
@@ -260,7 +278,7 @@
         UIImageView *videoImgView = [[UIImageView alloc] init];
         videoImgView.frame = CGRectMake(8, 0, 18, 11);
         videoImgView.contentMode = UIViewContentModeScaleAspectFit;
-        [videoImgView setImage:bundleImageNamed(@"fileicon_video_wall.png")];
+        [videoImgView setImage:bundleImageNamed(@"fileicon_video_wall")];
         [self.bottomView addSubview:videoImgView];
         _videoImgView = videoImgView;
     }

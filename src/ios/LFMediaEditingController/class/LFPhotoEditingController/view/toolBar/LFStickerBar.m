@@ -12,7 +12,11 @@
 #import "LFEditCollectionView.h"
 
 #define lf_stickerRow 2
-#define lf_stickerMargin 10
+CGFloat const lf_stickerSize = 80;
+CGFloat const lf_stickerMargin = 10;
+
+/** 贴图资源路径 */
+NSString *const kStickersPath = @"LFMediaEditingController.bundle/stickers";
 
 #define kImageExtensions @[@"png", @"jpg", @"jpeg", @"gif"]
 
@@ -191,27 +195,28 @@
     
     lf_collectionViewSticker.dataSources = @[self.files];
     
-    __weak LFStickerBar *weakSelf = self;
+    __weak __typeof__(self)weakSelf = self;
     [lf_collectionViewSticker callbackCellIdentifier:^NSString * _Nonnull(NSIndexPath * _Nonnull indexPath) {
         return [LFStickerCollectionViewCell identifier];
     } configureCell:^(NSIndexPath * _Nonnull indexPath, id  _Nonnull item, UICollectionViewCell * _Nonnull cell) {
-        UIImage * backImage = nil;
+        UIImage *backImage1 = nil;
         if (weakSelf.external) {
-            backImage = [UIImage imageWithContentsOfFile:[weakSelf.resourcePath stringByAppendingPathComponent:item]];
+            backImage1 = [UIImage imageWithContentsOfFile:[weakSelf.resourcePath stringByAppendingPathComponent:item]];
         } else {
-            backImage = bundleStickerImageNamed(item);
+            backImage1 = bundleStickerImageNamed(item);
         }
-        ((LFStickerCollectionViewCell *)cell).lf_imageView.image = backImage;
+        ((LFStickerCollectionViewCell *)cell).lf_imageView.image = backImage1;
     } didSelectItemAtIndexPath:^(NSIndexPath * _Nonnull indexPath, id  _Nonnull item) {
         if ([weakSelf.delegate respondsToSelector:@selector(lf_stickerBar:didSelectImage:)]) {
-            UIImage * backImage = nil;
+            UIImage * backImage1 = nil;
             if (weakSelf.external) {
-                backImage = [UIImage imageWithContentsOfFile:[weakSelf.resourcePath stringByAppendingPathComponent:item]];
+                backImage1 = [UIImage imageWithContentsOfFile:[weakSelf.resourcePath stringByAppendingPathComponent:item]];
             } else {
-                backImage = bundleStickerImageNamed(item);
+                backImage1 = bundleStickerImageNamed(item);
             }
-            [weakSelf.delegate lf_stickerBar:weakSelf didSelectImage:backImage];
+            [weakSelf.delegate lf_stickerBar:weakSelf didSelectImage:backImage1];
         }
+
     }];
     
     [self addSubview:lf_collectionViewSticker];

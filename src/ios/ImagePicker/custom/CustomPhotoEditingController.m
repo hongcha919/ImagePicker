@@ -65,6 +65,19 @@
     _EditingView.image = editImage;
 }
 
+-(void)setAllowEditing:(BOOL)allowEditing{
+    _allowEditing = allowEditing;
+    if (_EditingView) {
+        _EditingView.allowEditing = _allowEditing;
+    }
+
+    if (!_allowEditing) {
+        _edit_clipping_toolBar.hidden = YES;
+    }else{
+        _edit_clipping_toolBar.hidden = NO;
+    }
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     
@@ -90,13 +103,13 @@
 {
     [super viewWillLayoutSubviews];
     
-    if (_edit_naviBar) {
-        if (@available(iOS 11.0, *)) {
-            _edit_naviBar.height = kCustomTopbarHeight_iOS11;
-        } else {
-            _edit_naviBar.height = kCustomTopbarHeight;
-        }
-    }
+//    if (_edit_naviBar) {
+//        if (@available(iOS 11.0, *)) {
+//            _edit_naviBar.height = kCustomTopbarHeight_iOS11;
+//        } else {
+//            _edit_naviBar.height = kCustomTopbarHeight;
+//        }
+//    }
 }
 
 - (void)dealloc{
@@ -117,6 +130,7 @@
     _EditingView.clippingDelegate = self;
     _EditingView.cutType = self.cutType;
     _EditingView.customMinZoomScale = self.customMinZoomScale;
+    _EditingView.allowEditing = self.allowEditing;
     
     if (_photoEdit) {
         [self setEditImage:_photoEdit.editImage];
@@ -140,16 +154,16 @@
             topbarHeight = kCustomTopbarHeight;
         }
         
-        _edit_naviBar = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.width, topbarHeight)];
+        _edit_naviBar = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.width, LF_NavBarHeight)];
         _edit_naviBar.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleBottomMargin;
         _edit_naviBar.backgroundColor = self.editNaviBgColor;
         
-        UIView *naviBar = [[UIView alloc] initWithFrame:CGRectMake(0, topbarHeight-naviHeight, _edit_naviBar.frame.size.width, naviHeight)];
+        UIView *naviBar = [[UIView alloc] initWithFrame:CGRectMake(0, LF_StateBarHeight, _edit_naviBar.frame.size.width, LF_NavBarHeight-LF_StateBarHeight)];
         naviBar.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
         [_edit_naviBar addSubview:naviBar];
         
         CGFloat editCancelWidth = [self.cancelButtonTitle boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName:font} context:nil].size.width + 30;
-        UIButton *_edit_cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(margin, 0, editCancelWidth, naviHeight)];
+        UIButton *_edit_cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(margin, 0, editCancelWidth, naviBar.height)];
         _edit_cancelButton.autoresizingMask = UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
         [_edit_cancelButton setTitle:self.cancelButtonTitle forState:UIControlStateNormal];
         _edit_cancelButton.titleLabel.font = font;
@@ -159,7 +173,7 @@
         
         CGFloat editOkWidth = [self.oKButtonTitle boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName:font} context:nil].size.width + 30;
         
-        UIButton *_edit_finishButton = [[UIButton alloc] initWithFrame:CGRectMake(self.view.width - editOkWidth-margin, 0, editOkWidth, naviHeight)];
+        UIButton *_edit_finishButton = [[UIButton alloc] initWithFrame:CGRectMake(self.view.width - editOkWidth-margin, 0, editOkWidth, naviBar.height)];
         _edit_finishButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
         [_edit_finishButton setTitle:self.oKButtonTitle forState:UIControlStateNormal];
         _edit_finishButton.titleLabel.font = font;
@@ -169,9 +183,20 @@
         
         [self.view addSubview:_edit_naviBar];
     } else {
+        
+        CGFloat editCancelWidth = [self.cancelButtonTitle boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName:font} context:nil].size.width + 30;
+        UIButton *_edit_cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, editCancelWidth,  LF_NavBarHeight-LF_StateBarHeight)];
+        _edit_cancelButton.autoresizingMask = UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
+        [_edit_cancelButton setTitle:self.cancelButtonTitle forState:UIControlStateNormal];
+        _edit_cancelButton.titleLabel.font = font;
+        [_edit_cancelButton setTitleColor:self.cancelButtonTitleColorNormal forState:UIControlStateNormal];
+        [_edit_cancelButton addTarget:self action:@selector(cancelButtonClick) forControlEvents:UIControlEventTouchUpInside];
+        UIBarButtonItem *leftitem = [[UIBarButtonItem alloc] initWithCustomView:_edit_cancelButton];
+        self.navigationItem.leftBarButtonItem = leftitem;
+        
         CGFloat editOkWidth = [self.oKButtonTitle boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName:font} context:nil].size.width + 40;
         
-        UIButton *_edit_finishButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, editOkWidth, naviHeight)];
+        UIButton *_edit_finishButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, editOkWidth, LF_NavBarHeight-LF_StateBarHeight)];
         _edit_finishButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
 
         [_edit_finishButton setTitle:self.oKButtonTitle forState:UIControlStateNormal];
@@ -187,14 +212,19 @@
 {
     [_EditingView setIsClipping:YES animated:YES whRatio:self.aspectWHRatio];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [_EditingView setAspectWHRatio:self.aspectWHRatio];
+        [self->_EditingView setAspectWHRatio:self.aspectWHRatio];
         
         /** 关闭所有编辑 */
-        [_EditingView photoEditEnable:NO];
+        [self->_EditingView photoEditEnable:NO];
         /** 切换菜单 */
         self.edit_clipping_toolBar.alpha = 1.f;
         [self.view addSubview:self.edit_clipping_toolBar];
-        _edit_clipping_toolBar.enableReset = [self enableReset];
+        self->_edit_clipping_toolBar.enableReset = [self enableReset];
+        if (!self->_allowEditing) {
+            self->_edit_clipping_toolBar.hidden = YES;
+        }else{
+            self->_edit_clipping_toolBar.hidden = NO;
+        }
     });
 //    [self lf_clipToolbarDidReset:_edit_clipping_toolBar];
 }
@@ -209,28 +239,66 @@
 
 - (void)finishButtonClick
 {
-    [self showProgressHUD];
-    /** 取消贴图激活 */
-    [_EditingView stickerDeactivated];
+//    if (!self->_allowEditing) {
+//        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+//            if (data) {
+//                photoEdit = [[LFPhotoEdit alloc] initWithEditImage:self.editImage previewImage:self.editImage data:data];
+//            }
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                if ([self.delegate respondsToSelector:@selector(lf_PhotoEditingController:didFinishPhotoEdit:)]) {
+//                    [self.delegate lf_PhotoEditingController:self didFinishPhotoEdit:photoEdit];
+//                }
+//                [self hideProgressHUD];
+//            });
+//        });
+//    }else{
+        [self showProgressHUD];
+        /** 取消贴图激活 */
+        [_EditingView stickerDeactivated];
     
-    /** 处理编辑图片 */
-    __block LFPhotoEdit *photoEdit = nil;
-    NSDictionary *data = [_EditingView photoEditData];
-    UIImage *image = nil;
-    if (self.cutType<2 || data) {
-        image = [_EditingView createEditImage];
-    }
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        if (data) {
-            photoEdit = [[LFPhotoEdit alloc] initWithEditImage:self.editImage previewImage:image data:data];
+        /** 处理编辑图片 */
+        __block LFPhotoEdit *photoEdit = nil;
+        NSDictionary *data = [_EditingView photoEditData];
+        UIImage *image = nil;
+        if (self.cutType<2 || data) {
+            image = [_EditingView createEditImage];
         }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if ([self.delegate respondsToSelector:@selector(lf_PhotoEditingController:didFinishPhotoEdit:)]) {
-                [self.delegate lf_PhotoEditingController:self didFinishPhotoEdit:photoEdit];
+    
+        UIImage *resultImg = [self imageByScalingNotCroppingForSize:image cutType:self.cutType];
+    
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            if (data) {
+                photoEdit = [[LFPhotoEdit alloc] initWithEditImage:self.editImage previewImage:resultImg data:data];
             }
-            [self hideProgressHUD];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if ([self.delegate respondsToSelector:@selector(lf_PhotoEditingController:didFinishPhotoEdit:)]) {
+                    [self.delegate lf_PhotoEditingController:self didFinishPhotoEdit:photoEdit];
+                }
+                [self hideProgressHUD];
+            });
         });
-    });
+//    }
+    
+}
+
+- (UIImage*)imageByScalingNotCroppingForSize:(UIImage*)sourceImage cutType:(NSInteger)cutType
+{
+    if (cutType==0) {
+        UIGraphicsBeginImageContext(sourceImage.size);
+        //bezierPathWithOvalInRect方法后面传的Rect,可以看作(x,y,width,height),前两个参数是裁剪的中心点,后面两个决定裁剪的区域是圆形还是椭圆.
+        UIBezierPath *path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, sourceImage.size.width, sourceImage.size.height)];
+        //把路径设置为裁剪区域(超出裁剪区域以外的内容会自动裁剪掉)
+        [path addClip];
+        //把图片绘制到上下文当中
+        [sourceImage drawAtPoint:CGPointZero];
+        //从上下文当中生成一张新的图片
+        UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+        //结束上下文
+        UIGraphicsEndImageContext();
+        //返回新的图片
+        return newImage;
+    }
+    return sourceImage;
 }
 
 #pragma mark - UIGestureRecognizerDelegate
@@ -246,7 +314,11 @@
 - (UIView *)edit_clipping_toolBar
 {
     if (_edit_clipping_toolBar == nil) {
+        
         CGFloat h = 44.f;
+        if (!LF_IS_IPHONE_X) {
+            h = LF_TabbarHeight;
+        }
         if (@available(iOS 11.0, *)) {
             h += self.view.safeAreaInsets.bottom;
         }

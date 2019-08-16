@@ -9,9 +9,14 @@
 #import "JRPickColorView.h"
 
 
+@interface UIColor (isEqualToColor)
+
+- (BOOL)jr_isEqualToColor:(UIColor *)color;
+@end
+
 @implementation UIColor (isEqualToColor)
 
-- (BOOL)isEqualToColor:(UIColor *)color{
+- (BOOL)jr_isEqualToColor:(UIColor *)color{
     return CGColorEqualToColor(self.CGColor, color.CGColor);;
 }
 
@@ -92,7 +97,7 @@ CGFloat const JRPickColorView_magnifierView_Margin = 15.0f; //!放大镜距离�
     if (!isCreate) {
         [self createShowColorsContainer];
     } else {
-        NSCAssert(!isCreate, @"💩💩💩请给足够宽度显示选择器！！！💩💩💩");   
+        NSCAssert(!isCreate, @"���请给足够宽度显示选择器！！！���");   
     }
 }
 
@@ -132,7 +137,7 @@ CGFloat const JRPickColorView_magnifierView_Margin = 15.0f; //!放大镜距离�
     BOOL isYES = NO;
     for (NSInteger i=0; i<self.colors.count; i++) {
         UIColor *color1 = self.colors[i];
-        if ([color isEqualToColor:color1]) {
+        if ([color jr_isEqualToColor:color1]) {
             currentIndex = i;
             isYES = YES;
             break;
@@ -224,7 +229,7 @@ CGFloat const JRPickColorView_magnifierView_Margin = 15.0f; //!放大镜距离�
     _magnifierView.hidden = NO;
     UITouch *touch = [touches anyObject];
     _initialPoint = [touch locationInView:self];//开始触摸
-    __weak JRPickColorView *weakSelf = self;
+    __weak __typeof__(self)weakSelf = self;
 //    if ([[_showColorWindow subviews] containsObject:self] == NO) {
 //        [_showColorWindow addSubview:self];
 //    }
@@ -255,7 +260,7 @@ CGFloat const JRPickColorView_magnifierView_Margin = 15.0f; //!放大镜距离�
 {
     UITouch *touch = [touches anyObject];
     CGPoint p = [touch locationInView:self];//开始触摸
-    __weak JRPickColorView *weakSelf = self;
+    __weak __typeof__(self)weakSelf = self;
     _magnifierView.hidden = NO;
     if ([[_showColorWindow subviews] containsObject:_magnifierView] == NO) {
         [_showColorWindow insertSubview:_magnifierView belowSubview:self];
@@ -278,9 +283,9 @@ CGFloat const JRPickColorView_magnifierView_Margin = 15.0f; //!放大镜距离�
     CGFloat x = _index * _colorWidth + (_colorWidth / 2);
     if (self.animation) {
         [UIView animateWithDuration:0.25f delay:0.f usingSpringWithDamping:1.0f initialSpringVelocity:0.1f options:UIViewAnimationOptionCurveEaseInOut animations:^{
-            CGPoint point = _showColorsContainer.center;
+            CGPoint point = self.showColorsContainer.center;
             point.x = x;
-            _showColorsContainer.center = point;
+            self.showColorsContainer.center = point;
         } completion:nil];
     } else {
         CGPoint point = _showColorsContainer.center;

@@ -13,7 +13,7 @@
 
 @property (nonatomic, copy) NSString *title;
 @property (nonatomic, strong) NSURL *url;
-@property (nonatomic, assign) BOOL isOriginal;
+@property (nonatomic, readonly) BOOL isOriginal;
 @property (nonatomic, assign) BOOL isEnable;
 
 + (instancetype)defaultAudioItem;
@@ -37,6 +37,7 @@
 @property (nonatomic, copy) NSString *oKButtonTitle;
 @property (nonatomic, copy) NSString *cancelButtonTitle;
 @property (nonatomic, assign) CGFloat customTopbarHeight;
+@property (nonatomic, assign) CGFloat naviHeight;
 @property (nonatomic, assign) CGFloat customToolbarHeight;
 
 @end

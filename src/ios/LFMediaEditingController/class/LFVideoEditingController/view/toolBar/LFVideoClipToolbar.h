@@ -15,6 +15,18 @@
 /** 代理 */
 @property (nonatomic, weak) id<LFVideoClipToolbarDelegate> delegate;
 
+//编辑视图导航栏
+@property (nonatomic, strong) UIColor *editNaviBgColor;
+@property (nonatomic, strong) UIColor *editOKButtonTitleColorNormal;
+@property (nonatomic, strong) UIColor *editCancelButtonTitleColorNormal;
+//编辑视图底部工具栏
+//@property (nonatomic, strong) UIColor *editToolbarBgColor;
+//@property (nonatomic, strong) UIColor *editToolbarTitleColorNormal;
+//@property (nonatomic, strong) UIColor *editToolbarTitleColorDisabled;
+
+//刷新视图控件颜色
+-(void) refreshViewColor ;
+
 @end
 
 @protocol LFVideoClipToolbarDelegate <NSObject>

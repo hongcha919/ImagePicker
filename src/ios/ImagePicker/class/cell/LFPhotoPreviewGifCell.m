@@ -11,13 +11,36 @@
 #import "LFAssetManager.h"
 
 #import "LFGifPlayerManager.h"
+#import "UIImage+LF_Format.h"
+
+@interface LFPhotoPreviewGifCell ()
+
+@property (nonatomic, strong) NSData *imageData;
+
+@end
 
 @implementation LFPhotoPreviewGifCell
+
+
+- (UIImage *)previewImage
+{
+    if (self.imageData) {
+        return [UIImage LF_imageWithImageData:self.imageData];
+    }
+    return self.imageView.image;
+}
+
+- (void)setPreviewImage:(UIImage *)previewImage
+{
+    [super setPreviewImage:previewImage];
+    [self.imageView startAnimating];
+}
 
 /** 重置视图 */
 - (void)subViewReset
 {
     [super subViewReset];
+    self.imageData = nil;
     [[LFGifPlayerManager shared] stopGIFWithKey:[NSString stringWithFormat:@"%zd", [self.model hash]]];
 }
 /** 设置数据 */
@@ -40,6 +63,7 @@
                 if (completeHandler) {
                     completeHandler(data, info, isDegraded);
                 }
+                self.imageData = data;
             }
             
         } progressHandler:progressHandler networkAccessAllowed:YES];
@@ -49,7 +73,15 @@
 - (void)willDisplayCell
 {
     if (self.model.subType == LFAssetSubMediaTypeGIF) { /** GIF图片处理 */
-        [self setModel:self.model];
+        if (self.imageData) {
+            NSString *modelKey = [NSString stringWithFormat:@"%zd", [self.model hash]];
+            [[LFGifPlayerManager shared] transformGifDataToSampBufferRef:self.imageData key:modelKey execution:^(CGImageRef imageData, NSString *key) {
+                if ([modelKey isEqualToString:key]) {
+                    self.imageView.layer.contents = (__bridge id _Nullable)(imageData);
+                }
+            } fail:^(NSString *key) {
+            }];
+        }
     }
 }
 

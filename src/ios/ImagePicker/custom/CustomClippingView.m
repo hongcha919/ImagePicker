@@ -217,7 +217,7 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
                              if ([self.clippingDelegate respondsToSelector:@selector(lf_clippingViewDidEndZooming:)]) {
                                  [self.clippingDelegate lf_clippingViewDidEndZooming:self];
                              }
-                             _isReseting = NO;
+                             self->_isReseting = NO;
                          }];
     }
 }
@@ -327,7 +327,12 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
         contentOffset.y = zoomRect.origin.y * zoomScale / self.zoomScale;
     }
     
-    
+    if (cropRect.origin.y <= LF_NavBarHeight) {
+        cropRect.origin.y = LF_NavBarHeight+5;
+    }
+    if (cropRect.size.height >= ([UIScreen mainScreen].bounds.size.height- LF_NavBarHeight - LF_TabbarHeight)) {
+        cropRect.size.height = [UIScreen mainScreen].bounds.size.height- LF_NavBarHeight - LF_TabbarHeight-5;
+    }
     
     [UIView animateWithDuration:0.25
                           delay:0.0
@@ -377,6 +382,14 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
         myFrame.origin.y = MIN(myFrame.origin.y, toRect.origin.y);
         myFrame.size.width = MAX(myFrame.size.width, toRect.size.width);
         myFrame.size.height = MAX(myFrame.size.height, toRect.size.height);
+        
+        if (myFrame.origin.y <= LF_NavBarHeight) {
+            myFrame.origin.y = LF_NavBarHeight+5;
+        }
+        if (myFrame.size.height >= ([UIScreen mainScreen].bounds.size.height- LF_NavBarHeight - LF_TabbarHeight)) {
+            myFrame.size.height = [UIScreen mainScreen].bounds.size.height- LF_NavBarHeight - LF_TabbarHeight-5;
+        }
+        
         self.frame = myFrame;
         
         [self resetMinimumZoomScale];
@@ -412,7 +425,7 @@ NSString *const kCustomClippingViewData_zoomingView = @"CustomClippingViewData_z
             }
             
         } completion:^(BOOL complete) {
-            _isRotating = NO;
+            self->_isRotating = NO;
             if ([self.clippingDelegate respondsToSelector:@selector(lf_clippingViewDidEndZooming:)]) {
                 [self.clippingDelegate lf_clippingViewDidEndZooming:self];
             }

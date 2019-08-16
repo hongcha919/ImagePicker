@@ -7,6 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "LFAssetImageProtocol.h"
+#import "LFAssetPhotoProtocol.h"
+#import "LFAssetVideoProtocol.h"
 
 typedef NS_ENUM(NSUInteger, LFAssetMediaType) {
     LFAssetMediaTypePhoto = 0,
@@ -23,7 +26,6 @@ typedef NS_ENUM(NSUInteger, LFAssetSubMediaType) {
 @interface LFAsset : NSObject
 
 @property (nonatomic, readonly) id asset;             ///< PHAsset or ALAsset
-@property (nonatomic, assign) BOOL isSelected;      ///< The select status of a photo, default is No
 @property (nonatomic, readonly) LFAssetMediaType type;
 @property (nonatomic, readonly) LFAssetSubMediaType subType;
 @property (nonatomic, readonly) NSTimeInterval duration;
@@ -31,12 +33,25 @@ typedef NS_ENUM(NSUInteger, LFAssetSubMediaType) {
 /** 关闭livePhoto （ subType = LFAssetSubMediaTypeLivePhoto is work ）default is No */
 @property (nonatomic, assign) BOOL closeLivePhoto;
 
-/** 自定义预览图 */
-@property (nonatomic, readonly) UIImage *previewImage;
 
 /// Init a photo dataModel With a asset
 /// 用一个PHAsset/ALAsset实例，初始化一个照片模型
 - (instancetype)initWithAsset:(id)asset;
 
-- (instancetype)initWithImage:(UIImage *)image;
+
+@end
+
+@interface LFAsset (preview)
+
+/** 自定义缩略图 */
+@property (nonatomic, readonly) UIImage *thumbnailImage;
+/** 自定义预览图 */
+@property (nonatomic, readonly) UIImage *previewImage;
+/** 自定义视频URL */
+@property (nonatomic, readonly) NSURL *previewVideoUrl;
+
+
+- (instancetype)initWithImage:(UIImage *)image __deprecated_msg("Method deprecated. Use `initWithObject:`");
+- (instancetype)initWithObject:(id/* <LFAssetImageProtocol/LFAssetPhotoProtocol/LFAssetVideoProtocol> */)asset;
+
 @end

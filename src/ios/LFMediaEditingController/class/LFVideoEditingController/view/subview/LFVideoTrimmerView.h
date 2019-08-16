@@ -9,6 +9,8 @@
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
 
+OBJC_EXTERN NSTimeInterval lfme_videoDuration(NSTimeInterval duration);
+
 @interface LFVideoTrimmerView : UIView
 
 /** 视频对象 */
@@ -19,12 +21,21 @@
 @property (nonatomic, assign) CGFloat controlMinWidth;
 /** 最大尺寸 */
 @property (nonatomic, assign) CGFloat controlMaxWidth;
+
+/** 起始时间 */
+@property (nonatomic, readonly) double startTime;
+/** 结束时间 */
+@property (nonatomic, readonly) double endTime;
+
+@property (nonatomic, getter=isEnabledLeftCorner) BOOL enabledLeftCorner;
+@property (nonatomic, getter=isEnabledRightCorner) BOOL enabledRightCorner;
+
 /** 进度 */
 @property (nonatomic, assign) double progress;
 - (void)setHiddenProgress:(BOOL)hidden;
 
 /** 重设控制区域 */
-- (void)setGridRect:(CGRect)gridRect animated:(BOOL)animated;
+- (void)setGridRange:(NSRange)gridRange animated:(BOOL)animated;
 
 /** 代理 */
 @property (nonatomic, weak) id delegate;
@@ -34,8 +45,8 @@
 
 @protocol LFVideoTrimmerViewDelegate <NSObject>
 
-- (void)lf_videoTrimmerViewDidBeginResizing:(LFVideoTrimmerView *)trimmerView gridRect:(CGRect)gridRect;
-- (void)lf_videoTrimmerViewDidResizing:(LFVideoTrimmerView *)trimmerView gridRect:(CGRect)gridRect;
-- (void)lf_videoTrimmerViewDidEndResizing:(LFVideoTrimmerView *)trimmerView gridRect:(CGRect)gridRect;
+- (void)lf_videoTrimmerViewDidBeginResizing:(LFVideoTrimmerView *)trimmerView gridRange:(NSRange)gridRange;
+- (void)lf_videoTrimmerViewDidResizing:(LFVideoTrimmerView *)trimmerView gridRange:(NSRange)gridRange;
+- (void)lf_videoTrimmerViewDidEndResizing:(LFVideoTrimmerView *)trimmerView gridRange:(NSRange)gridRange;
 
 @end

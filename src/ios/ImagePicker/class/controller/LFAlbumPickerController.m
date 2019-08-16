@@ -8,14 +8,17 @@
 
 #import "LFAlbumPickerController.h"
 #import "LFImagePickerController.h"
+#import "LFImagePickerController+property.h"
 #import "LFPhotoPickerController.h"
 #import "LFImagePickerHeader.h"
 #import "UIView+LFFrame.h"
 #import "LFAssetManager+Authorization.h"
 #import "LFAlbumCell.h"
 
+//#ifdef LF_MEDIAEDIT
 #import "LFPhotoEditManager.h"
 #import "LFPhotoEdit.h"
+//#endif
 
 @interface LFAlbumPickerController ()<UITableViewDataSource,UITableViewDelegate,PHPhotoLibraryChangeObserver> {
     UITableView *_tableView;
@@ -31,7 +34,7 @@
     self = [super init];
     if (self) {
         // 采用微信的方式，只在相册列表页定义backBarButtonItem为返回，其余的顺系统的做法
-        self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"返回" style:UIBarButtonItemStylePlain target:nil action:nil];
+        self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:[NSBundle lf_localizedStringForKey:@"_navigationBarBackTitle"] style:UIBarButtonItemStylePlain target:nil action:nil];
     }
     return self;
 }
@@ -61,11 +64,13 @@
     /** 移除数据源 */
     [imagePickerVc.selectedModels removeAllObjects];
     /** 恢复原图 */
-    imagePickerVc.isSelectOriginalPhoto = NO;
+    imagePickerVc.isSelectOriginalPhoto = imagePickerVc.defaultSelectOriginalPhoto;
 
-    if (imagePickerVc.allowEditing || imagePickerVc.syncAlbum) {
+//#ifdef LF_MEDIAEDIT
+    if (imagePickerVc.allowEditing) {
         [_tableView reloadData];
     }
+//#endif
 }
 
 - (void)dealloc
@@ -81,26 +86,26 @@
     [imagePickerVc showProgressHUD];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [[LFAssetManager manager] getAllAlbums:imagePickerVc.allowPickingVideo allowPickingImage:imagePickerVc.allowPickingImage ascending:imagePickerVc.sortAscendingByCreateDate completion:^(NSArray<LFAlbum *> *models) {
+        [[LFAssetManager manager] getAllAlbums:imagePickerVc.allowPickingType ascending:imagePickerVc.sortAscendingByCreateDate completion:^(NSArray<LFAlbum *> *models) {
             
-            _albumArr = [NSMutableArray arrayWithArray:models];
+            self->_albumArr = [NSMutableArray arrayWithArray:models];
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [imagePickerVc hideProgressHUD];
-                if (!_tableView) {
-                    _tableView = [[UITableView alloc] initWithFrame:[self viewFrameWithoutNavigation] style:UITableViewStylePlain];
-                    _tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-                    _tableView.tableFooterView = [[UIView alloc] init];
-                    _tableView.dataSource = self;
-                    _tableView.delegate = self;
-                    [_tableView registerClass:[LFAlbumCell class] forCellReuseIdentifier:@"LFAlbumCell"];
+                if (!self->_tableView) {
+                    self->_tableView = [[UITableView alloc] initWithFrame:[self viewFrameWithoutNavigation] style:UITableViewStylePlain];
+                    self->_tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+                    self->_tableView.tableFooterView = [[UIView alloc] init];
+                    self->_tableView.dataSource = self;
+                    self->_tableView.delegate = self;
+                    [self->_tableView registerClass:[LFAlbumCell class] forCellReuseIdentifier:@"LFAlbumCell"];
                     /** 这个设置iOS9以后才有，主要针对iPad，不设置的话，分割线左侧空出很多 */
-                    if ([_tableView respondsToSelector:@selector(setCellLayoutMarginsFollowReadableWidth:)]) {
-                        _tableView.cellLayoutMarginsFollowReadableWidth = NO;
+                    if ([self->_tableView respondsToSelector:@selector(setCellLayoutMarginsFollowReadableWidth:)]) {
+                        self->_tableView.cellLayoutMarginsFollowReadableWidth = NO;
                     }
-                    [self.view addSubview:_tableView];
+                    [self.view addSubview:self->_tableView];
                 } else {
-                    [_tableView reloadData];
+                    [self->_tableView reloadData];
                 }
             });
         }];
@@ -128,8 +133,7 @@
             }
             [[LFAssetManager manager] getAssetFromFetchResult:album.result
                                                       atIndex:index
-                                            allowPickingVideo:imagePickerVc.allowPickingVideo
-                                            allowPickingImage:imagePickerVc.allowPickingImage
+                                             allowPickingType:imagePickerVc.allowPickingType
                                                     ascending:imagePickerVc.sortAscendingByCreateDate
                                                    completion:^(LFAsset *model) {
                                                        
@@ -166,18 +170,22 @@
 - (void)setCellPosterImage:(LFAlbumCell *)cell
 {
     LFAsset *model = cell.model.posterAsset;
+//#ifdef LF_MEDIAEDIT
     /** 优先显示编辑图片 */
     LFPhotoEdit *photoEdit = [[LFPhotoEditManager manager] photoEditForAsset:model];
     if (photoEdit.editPosterImage) {
         cell.posterImage = photoEdit.editPosterImage;
     } else {
+//#endif
         [[LFAssetManager manager] getPhotoWithAsset:model.asset photoWidth:80 completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
             if ([cell.model.posterAsset isEqual:model]) {
                 cell.posterImage = photo;
             }
             
         } progressHandler:nil networkAccessAllowed:NO];
+//#ifdef LF_MEDIAEDIT
     }
+//#endif
 }
 
 #pragma mark - PHPhotoLibraryChangeObserver
@@ -189,6 +197,9 @@
         // Check for changes to the displayed album itself
         // (its existence and metadata, not its member assets).
         
+        NSMutableArray *deleteObjects = [NSMutableArray array];
+        NSMutableArray *changedObjects = [NSMutableArray array];
+        
         for (NSInteger i=0; i<self.albumArr.count; i++) {
             LFAlbum *album = self.albumArr[i];
             PHObjectChangeDetails *albumChanges = [changeInfo changeDetailsForObject:album.album];
@@ -196,12 +207,53 @@
                 // Fetch the new album and update the UI accordingly.
                 [album changedAlbum:[albumChanges objectAfterChanges]];
                 if (albumChanges.objectWasDeleted) {
-                    [self.albumArr removeObjectAtIndex:i];
-                    i--;
+                    [deleteObjects addObject:album];
+                }
+            }
+            // Check for changes to the list of assets (insertions, deletions, moves, or updates).
+            PHFetchResultChangeDetails *collectionChanges = [changeInfo changeDetailsForFetchResult:album.result];
+            if (collectionChanges) {
+                // Get the new fetch result for future change tracking.
+                [album changedResult:collectionChanges.fetchResultAfterChanges];
+                
+                if (collectionChanges.hasIncrementalChanges)  {
+                    // Tell the collection view to animate insertions/deletions/moves
+                    // and to refresh any cells that have changed content.
+                    
+                    album.models = nil;
+                    album.posterAsset = nil;
+                    
+                    [changedObjects addObject:album];
                 }
             }
         }
-        [_tableView reloadData];
+        
+        if (deleteObjects.count || changedObjects.count) {
+            [self->_tableView beginUpdates];
+            if (deleteObjects.count) {
+                [self.albumArr removeObjectsInArray:deleteObjects];
+                NSMutableArray *indexPaths = [NSMutableArray array];
+                for (id object in deleteObjects) {
+                    NSInteger index = [self.albumArr indexOfObject:object];
+                    [indexPaths addObject:[NSIndexPath indexPathForRow:index inSection:0]];
+                }
+                [self->_tableView deleteRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationFade];
+                deleteObjects = nil;
+            }
+            if (changedObjects.count) {
+                NSMutableArray *indexPaths = [NSMutableArray array];
+                for (id object in changedObjects) {
+                    NSInteger index = [self.albumArr indexOfObject:object];
+                    [indexPaths addObject:[NSIndexPath indexPathForRow:index inSection:0]];
+                }
+                [self->_tableView reloadRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationFade];
+                changedObjects = nil;
+            }
+            
+            [self->_tableView endUpdates];
+        }
+        
+        
     });
 }
 @end

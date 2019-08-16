@@ -8,7 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
+//#ifdef LF_MEDIAEDIT
 @class LFPhotoEditingController, LFVideoEditingController;
+//#endif
 
 @interface LFLayoutPickerController : UINavigationController
 
@@ -26,6 +28,8 @@
 @property (nonatomic, strong) UIColor *naviBgColor;
 @property (nonatomic, strong) UIColor *naviTitleColor;
 @property (nonatomic, strong) UIFont *naviTitleFont;
+@property (nonatomic, strong) UIColor *naviTipsTextColor;
+@property (nonatomic, strong) UIFont *naviTipsFont;
 @property (nonatomic, strong) UIColor *barItemTextColor;
 @property (nonatomic, strong) UIFont *barItemTextFont;
 @property (nonatomic, strong) UIColor *toolbarBgColor;
@@ -34,7 +38,12 @@
 @property (nonatomic, strong) UIFont *toolbarTitleFont;
 @property (nonatomic, strong) UIColor *previewNaviBgColor;
 
+
 /// 自定义文字
+/// Copy LFImagePickerController.strings to any location of your project and modify the corresponding value.
+/// 复制LFImagePickerController.strings到项目任意位置，修改对应的值。
+/// These property have the highest priority and use LFImagePickerController.strings as much as possible. Otherwise, some properties of LFImagePickerController.strings will be invalid.
+/// 这些属性拥有最高的优先级，尽可能使用LFImagePickerController.strings。否则会导致LFImagePickerController.strings某些属性失效。
 @property (nonatomic, copy) NSString *doneBtnTitleStr;
 @property (nonatomic, copy) NSString *cancelBtnTitleStr;
 @property (nonatomic, copy) NSString *previewBtnTitleStr;
@@ -43,10 +52,11 @@
 @property (nonatomic, copy) NSString *settingBtnTitleStr;
 @property (nonatomic, copy) NSString *processHintStr;
 
+//#ifdef LF_MEDIAEDIT
 #pragma mark - 编辑模式
 @property (nonatomic, copy) void (^photoEditLabrary)(LFPhotoEditingController *lf_photoEditingVC);
 @property (nonatomic, copy) void (^videoEditLabrary)(LFVideoEditingController *lf_videoEditingVC);
-
+//#endif
 
 - (void)showAlertWithTitle:(NSString *)title;
 - (void)showAlertWithTitle:(NSString *)title complete:(void (^)(void))complete;
@@ -58,4 +68,6 @@
 - (void)showProgressHUD;
 - (void)hideProgressHUD;
 
+- (void)showNeedProgressHUD;
+- (void)setProcess:(CGFloat)process;
 @end

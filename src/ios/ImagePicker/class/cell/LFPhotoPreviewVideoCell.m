@@ -11,8 +11,10 @@
 #import "LFPhotoPreviewCell_property.h"
 #import "LFAssetManager.h"
 
+//#ifdef LF_MEDIAEDIT
 #import "LFVideoEditManager.h"
 #import "LFVideoEdit.h"
+//#endif
 
 @interface LFPhotoPreviewVideoCell ()
 
@@ -62,24 +64,42 @@
 /** 设置数据 */
 - (void)subViewSetModel:(LFAsset *)model completeHandler:(void (^)(id data,NSDictionary *info,BOOL isDegraded))completeHandler progressHandler:(void (^)(double progress, NSError *error, BOOL *stop, NSDictionary *info))progressHandler
 {
-    /** 优先显示编辑图片 */
-    LFVideoEdit *videoEdit = [[LFVideoEditManager manager] videoEditForAsset:model];
-    if (videoEdit.editPreviewImage) {
-        self.previewImage = videoEdit.editPreviewImage;
-        AVPlayerItem *playerItem = [[AVPlayerItem alloc] initWithURL:videoEdit.editFinalURL];
-        [self readyToPlay:playerItem];
-    } else {
-        [super subViewSetModel:model completeHandler:completeHandler progressHandler:progressHandler];
-        if (model.type == LFAssetMediaTypeVideo) { /** video */
-            [[LFAssetManager manager] getVideoWithAsset:model.asset completion:^(AVPlayerItem *playerItem, NSDictionary *info) {
-                [self readyToPlay:playerItem];
-            }];
+    if (model.type == LFAssetMediaTypeVideo) { /** video */
+//#ifdef LF_MEDIAEDIT
+        /** 优先显示编辑图片 */
+        LFVideoEdit *videoEdit = [[LFVideoEditManager manager] videoEditForAsset:model];
+        if (videoEdit.editPreviewImage) {
+            self.previewImage = videoEdit.editPreviewImage;
+            AVPlayerItem *playerItem = [[AVPlayerItem alloc] initWithURL:videoEdit.editFinalURL];
+            [self readyToPlay:playerItem];
         }
+        else {
+//#endif
+            if (model.previewVideoUrl) { /** 显示自定义图片 */
+                self.previewImage = model.thumbnailImage;
+                AVPlayerItem *playerItem = [AVPlayerItem playerItemWithURL:model.previewVideoUrl];
+                [self readyToPlay:playerItem];
+            } else {
+                [super subViewSetModel:model completeHandler:completeHandler progressHandler:progressHandler];
+                [[LFAssetManager manager] getVideoWithAsset:model.asset completion:^(AVPlayerItem *playerItem, NSDictionary *info) {
+                    if ([model isEqual:self.model]) {
+                        [self readyToPlay:playerItem];
+                    }
+                }];
+            }
+//#ifdef LF_MEDIAEDIT
+        }
+//#endif
     }
 }
 
 - (void)readyToPlay:(AVPlayerItem *)playerItem
 {
+    if (_player) {
+        [_player pause];
+        [_player.currentItem removeObserver:self forKeyPath:@"status"];
+        [[NSNotificationCenter defaultCenter] removeObserver:self];
+    }
     [playerItem addObserver:self
                  forKeyPath:@"status"
                     options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
@@ -143,7 +163,7 @@
 {
     if (self.model.type == LFAssetMediaTypeVideo) { /** 视频处理 */
         [_player pause];
-        [_playButton setImage:bundleImageNamed(@"MMVideoPreviewPlay.png") forState:UIControlStateNormal];
+        [_playButton setImage:bundleImageNamed(@"MMVideoPreviewPlay") forState:UIControlStateNormal];
         _isPlaying = NO;
     }
 }
@@ -152,8 +172,8 @@
     _playButton = [UIButton buttonWithType:UIButtonTypeCustom];
     _playButton.frame = self.contentView.bounds;
     _playButton.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleWidth;
-    [_playButton setImage:bundleImageNamed(@"MMVideoPreviewPlay.png") forState:UIControlStateNormal];
-    [_playButton setImage:bundleImageNamed(@"MMVideoPreviewPlayHL.png") forState:UIControlStateHighlighted];
+    [_playButton setImage:bundleImageNamed(@"MMVideoPreviewPlay") forState:UIControlStateNormal];
+    [_playButton setImage:bundleImageNamed(@"MMVideoPreviewPlayHL") forState:UIControlStateHighlighted];
     [_playButton addTarget:self action:@selector(playButtonClick) forControlEvents:UIControlEventTouchUpInside];
     _playButton.hidden = YES;
     [self.contentView addSubview:_playButton];

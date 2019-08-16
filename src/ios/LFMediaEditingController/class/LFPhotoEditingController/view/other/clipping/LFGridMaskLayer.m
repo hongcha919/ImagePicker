@@ -44,20 +44,48 @@
 
 - (void)setMaskRect:(CGRect)maskRect animated:(BOOL)animated
 {
-    CGMutablePathRef mPath = CGPathCreateMutable();
-    CGPathAddRect(mPath, NULL, self.bounds);
-    CGPathAddRect(mPath, NULL, maskRect);
-    [self removeAnimationForKey:@"lf_maskLayer_opacityAnimate"];
-    if (animated) {
-        CABasicAnimation *animate = [CABasicAnimation animationWithKeyPath:@"opacity"];
-        animate.duration = 0.25f;
-        animate.fromValue = @(0.0);
-        animate.toValue = @(1.0);
-        self.path = mPath;
-        [self addAnimation:animate forKey:@"lf_maskLayer_opacityAnimate"];
-    } else {
-        self.path = mPath;
+    if (_cutType == 0) {
+        NSLog(@"www......%f \n nwwww......%f", self.bounds.size.width, maskRect.size.width);
+        if (self.bounds.size.width != maskRect.size.width) {
+            self.fillColor = [UIColor colorWithWhite:.0f alpha:.5f].CGColor;
+            
+            CGMutablePathRef mPath = CGPathCreateMutable();
+            CGPathAddRect(mPath, NULL, self.bounds);
+            CGPathAddEllipseInRect(mPath, nil, maskRect);
+            [self removeAnimationForKey:@"lf_maskLayer_opacityAnimate"];
+            if (animated) {
+                CABasicAnimation *animate = [CABasicAnimation animationWithKeyPath:@"opacity"];
+                animate.duration = 0.25f;
+                animate.fromValue = @(0.0);
+                animate.toValue = @(1.0);
+                self.path = mPath;
+                [self addAnimation:animate forKey:@"lf_maskLayer_opacityAnimate"];
+            } else {
+                self.path = mPath;
+            }
+        }else{
+            CGMutablePathRef mPath = CGPathCreateMutable();
+            CGPathAddRect(mPath, NULL, self.bounds);
+            self.fillColor = [UIColor clearColor].CGColor;
+            self.path = mPath;
+        }
+    }else{
+        CGMutablePathRef mPath = CGPathCreateMutable();
+        CGPathAddRect(mPath, NULL, self.bounds);
+        CGPathAddRect(mPath, NULL, maskRect);
+        [self removeAnimationForKey:@"lf_maskLayer_opacityAnimate"];
+        if (animated) {
+            CABasicAnimation *animate = [CABasicAnimation animationWithKeyPath:@"opacity"];
+            animate.duration = 0.25f;
+            animate.fromValue = @(0.0);
+            animate.toValue = @(1.0);
+            self.path = mPath;
+            [self addAnimation:animate forKey:@"lf_maskLayer_opacityAnimate"];
+        } else {
+            self.path = mPath;
+        }
     }
+    
 }
 
 @end

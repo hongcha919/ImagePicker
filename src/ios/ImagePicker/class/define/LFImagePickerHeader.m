@@ -8,12 +8,18 @@
 
 #import "LFImagePickerHeader.h"
 
-NSString *const kBundlePath = @"LFImagePickerController.bundle";
+/** 视频时间（取整：四舍五入） */
+NSTimeInterval lf_videoDuration(NSTimeInterval duration)
+{
+    return (NSInteger)(duration+0.5f)*1.f;
+}
 
 /** 标清图压缩大小 */
 float const kCompressSize = 100.f;
 /** 缩略图压缩大小 */
 float const kThumbnailCompressSize = 10.f;
+/** 图片最大大小 */
+float const kMaxPhotoBytes = 6*1024*1024.f;
 /** 视频最大时长 */
 float const kMaxVideoDurationze = 5*60.f;
 
@@ -24,6 +30,3 @@ NSString *const kImageInfoFileOriginalData = @"ImageInfoFileOriginalData";     /
 NSString *const kImageInfoFileThumbnailData = @"ImageInfoFileThumbnailData";     // 图片数据 缩略图
 NSString *const kImageInfoMediaType = @"ImageInfoMediaType";     // 图片类型
 
-@implementation LFImagePickerHeader
-
-@end

@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
+//#ifdef LF_MEDIAEDIT
 @class LFVideoEdit, LFAsset, LFResultVideo;
 @interface LFVideoEditManager : NSObject
 
@@ -23,10 +24,12 @@
  通过asset解析视频
  
  @param asset LFAsset
+ @param presetName 压缩预设名称 nil则默认为AVAssetExportPresetMediumQuality
  @param completion 回调
  */
 - (void)getVideoWithAsset:(LFAsset *)asset
+               presetName:(NSString *)presetName
                completion:(void (^)(LFResultVideo *resultVideo))completion;
 
 @end
-
+//#endif

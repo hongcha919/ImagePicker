@@ -40,10 +40,21 @@
 /** 视频压缩 */
 + (void)encodeVideoWithURL:(NSURL *)videoURL outPath:(NSString *)outPath complete:(void (^)(BOOL isSuccess, NSError *error))complete
 {
-    AVURLAsset *asset = [AVURLAsset URLAssetWithURL:videoURL options:nil];
-    [self encodeVideoWithAsset:asset outPath:outPath complete:complete];
+    [self encodeVideoWithURL:videoURL outPath:outPath presetName:AVAssetExportPreset1280x720 complete:complete];
 }
+
++ (void)encodeVideoWithURL:(NSURL *)videoURL outPath:(NSString *)outPath presetName:(NSString *)presetName complete:(void (^)(BOOL isSuccess, NSError *error))complete
+{
+    AVURLAsset *asset = [AVURLAsset URLAssetWithURL:videoURL options:nil];
+    [self encodeVideoWithAsset:asset outPath:outPath presetName:presetName complete:complete];
+}
+
 + (void)encodeVideoWithAsset:(AVAsset *)asset outPath:(NSString *)outPath complete:(void (^)(BOOL isSuccess, NSError *error))complete
+{
+    [self encodeVideoWithAsset:asset outPath:outPath presetName:nil complete:complete];
+}
+
++ (void)encodeVideoWithAsset:(AVAsset *)asset outPath:(NSString *)outPath presetName:(NSString *)presetName complete:(void (^)(BOOL isSuccess, NSError *error))complete
 {
     if (complete == nil) return;
     if (asset == nil || outPath.length == 0) {
@@ -57,6 +68,9 @@
     
     NSArray *tracks = [asset tracksWithMediaType:AVMediaTypeVideo];
     AVAssetTrack *videoTrack = [tracks objectAtIndex:0];
+    if (videoTrack == nil) {
+        complete(NO, nil);
+    }
     
     AVMutableVideoComposition *waterMarkVideoComposition;
     
@@ -110,8 +124,14 @@
     if ([[NSFileManager defaultManager] fileExistsAtPath:outPath]) {
         [[NSFileManager defaultManager] removeItemAtPath:outPath error:nil];
     }
+    
+    NSString *exprotPresetName = (presetName.length ? presetName : AVAssetExportPreset1280x720);
+    if (![[AVAssetExportSession exportPresetsCompatibleWithAsset:asset] containsObject:exprotPresetName]) {
+        exprotPresetName = AVAssetExportPresetHighestQuality;
+        NSLog(@"The video is not compatible with presetName. Use AVAssetExportPresetHighestQuality.");
+    }
 
-    AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetMediumQuality];
+    AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:exprotPresetName];
     exportSession.outputURL = [NSURL fileURLWithPath:outPath];
     exportSession.videoComposition = waterMarkVideoComposition;
     exportSession.outputFileType = AVFileTypeQuickTimeMovie;
@@ -155,9 +175,14 @@
     if(!thumbnailImageRef)
         NSLog(@"thumbnailImageGenerationError %@",thumbnailImageGenerationError);
     
-    UIImage *thumbnailImage = thumbnailImageRef ? [[UIImage alloc]initWithCGImage:thumbnailImageRef] : nil;
+    if (thumbnailImageRef) {
+        UIImage *thumbnailImage = [[UIImage alloc]initWithCGImage:thumbnailImageRef];
+        CGImageRelease(thumbnailImageRef);
+        
+        return thumbnailImage;
+    }
     
-    return thumbnailImage;
+    return nil;
 }
 
 + (void)GIFImageForVideo:(NSURL *)videoURL complete:(void (^)(UIImage *gifImage))complete
@@ -194,8 +219,7 @@
              [CATransaction setDisableActions:YES];
              
              UIImage *img = [UIImage imageWithCGImage:image];
-//             NSString *path = [[GlobalConstants documentPath] stringByAppendingPathComponent:[NSString stringWithFormat:@"%f.jpg", CMTimeGetSeconds(actualTime)]];
-//             [UIImageJPEGRepresentation(img, 1.f) writeToFile:path atomically:YES];
+             
              [images addObject:img];
              
              [CATransaction commit];

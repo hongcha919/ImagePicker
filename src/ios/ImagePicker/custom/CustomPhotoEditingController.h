@@ -32,6 +32,8 @@
 @property (nonatomic, assign) float aspectWHRatio;
 @property (nonatomic, assign) NSInteger cutType;//0 圆形；1矩形；其他 网格形状
 @property (nonatomic, assign) float customMinZoomScale;
+/** 是否允许编辑 默认NO */
+@property (nonatomic, assign) BOOL allowEditing;
 
 @end
 

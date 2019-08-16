@@ -10,6 +10,8 @@
 
 @interface LFGridMaskLayer : CAShapeLayer
 
+@property (nonatomic, assign) NSInteger cutType;//0 圆形；1矩形
+
 @property (nonatomic, assign) CGColorRef maskColor;
 @property (nonatomic, setter=setMaskRect:) CGRect maskRect;
 - (void)setMaskRect:(CGRect)maskRect animated:(BOOL)animated;

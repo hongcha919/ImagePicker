@@ -24,14 +24,19 @@
 /** 允许剪辑的最小时长 1秒 */
 @property (nonatomic, assign) double minClippingDuration;
 
+/** 播放速率 */
+@property (nonatomic, assign) float rate;
+
 /** 取消剪辑 */
 - (void)cancelClipping:(BOOL)animated;
+/** 重置还原 */
+- (void)resetClipping:(BOOL)animated;
 
 /** 数据 */
 - (void)setVideoAsset:(AVAsset *)asset placeholderImage:(UIImage *)image;
 
-/** 剪辑视频 */
-- (void)exportAsynchronouslyWithTrimVideo:(void (^)(NSURL *trimURL, NSError *error))complete;
+/** 导出视频 */
+- (void)exportAsynchronouslyWithTrimVideo:(void (^)(NSURL *trimURL, NSError *error))complete progress:(void (^)(float progress))progress;
 
 /** 播放 */
 - (void)playVideo;
@@ -39,5 +44,8 @@
 - (void)pauseVideo;
 /** 重置视频 */
 - (void)resetVideoDisplay;
+
+/** 获取裁剪后的视频时长 */
+-(double)getEditVideoDuration;
 
 @end

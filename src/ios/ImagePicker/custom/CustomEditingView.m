@@ -88,6 +88,7 @@
     clippingView.customMinZoomScale = self.customMinZoomScale;
     /** 非剪裁情况禁止剪裁层移动 */
     clippingView.scrollEnabled = NO;
+    clippingView.allowEditing = self.allowEditing;
     [self.clipZoomView addSubview:clippingView];
     self.clippingView = clippingView;
     
@@ -189,6 +190,18 @@
     _customMinZoomScale = customMinZoomScale;
     if (self.clippingView) {
         self.clippingView.customMinZoomScale = customMinZoomScale;
+    }
+}
+
+- (void)setAllowEditing:(BOOL)allowEditing
+{
+    _allowEditing = allowEditing;
+    if (self.clippingView) {
+        self.clippingView.allowEditing = _allowEditing;
+    }
+    if (!_allowEditing) {
+        self.gridView.hidden = YES;
+        self.imagePixel.hidden = YES;
     }
 }
 
@@ -407,10 +420,12 @@
 {
     CGFloat zoomScale = self.zoomScale;
     [self setZoomScale:1.f];
-    
+    //编辑图片之前隐藏编辑框，防止编辑之后的图片含有裁剪边框
     self.gridView.hidden = true;
     UIImage *image = [self LFME_captureImageAtFrame:self.gridView.gridRect cutType:self.cutType cornerRadius:10];
     [self setZoomScale:zoomScale];
+    //图片编辑完成后显示编辑框
+    self.gridView.hidden = NO;
     
     return image;
 }

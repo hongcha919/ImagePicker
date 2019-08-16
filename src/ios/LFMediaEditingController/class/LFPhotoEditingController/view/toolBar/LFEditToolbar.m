@@ -14,6 +14,8 @@
 #define EditToolbarButtonImageNormals @[@"EditImagePenToolBtn.png", @"EditImageEmotionToolBtn.png", @"EditImageTextToolBtn.png", @"EditImageMosaicToolBtn.png", @"EditImageCropToolBtn.png", @"EditImageAudioToolBtn.png", @"EditVideoCropToolBtn.png"]
 #define EditToolbarButtonImageHighlighted @[@"EditImagePenToolBtn_HL.png", @"EditImageEmotionToolBtn_HL.png", @"EditImageTextToolBtn_HL.png", @"EditImageMosaicToolBtn_HL.png", @"EditImageCropToolBtn_HL.png", @"EditImageAudioToolBtn_HL.png", @"EditVideoCropToolBtn_HL.png"]
 
+#define kToolbar_RateTips(r) [NSString stringWithFormat:@"x %.1f", r]
+
 #define kToolbar_MainHeight 44
 #define kToolbar_SubHeight 55
 
@@ -29,6 +31,10 @@
 @property (nonatomic, weak) UIView *edit_drawMenu_color;
 @property (nonatomic, weak) UIView *edit_splashMenu;
 @property (nonatomic, weak) UIButton *edit_splashMenu_revoke;
+/** 进度条 */
+@property (nonatomic, weak) UIView *edit_rateMenu;
+@property (nonatomic, weak) UISlider *edit_rateMenu_slider;
+@property (nonatomic, weak) UIButton *edit_rateMenu_tipsButton;
 
 /** 当前激活菜单按钮 */
 @property (nonatomic, weak) UIButton *edit_splashMenu_action_button;
@@ -405,8 +411,8 @@
 {
     [self sendSubviewToBack:_selectMenu];
     [UIView animateWithDuration:0.25f animations:^{
-        _selectMenu.y = _edit_menu.y;
-        _selectMenu.alpha = 0.f;
+        self->_selectMenu.y = self->_edit_menu.y;
+        self->_selectMenu.alpha = 0.f;
     }];
 }
 
@@ -472,12 +478,32 @@
     self.edit_drawMenu_color.backgroundColor = self.draw_colorSlider.color;
 }
 
+- (float)rate
+{
+    return self.edit_rateMenu_slider.value;
+}
+
+- (void)setRate:(float)rate
+{
+    self.edit_rateMenu_slider.value = rate;
+    [_edit_rateMenu_tipsButton setTitle:kToolbar_RateTips(rate) forState:UIControlStateNormal];
+}
+
 #pragma mark - JRPickColorViewDelegate
 - (void)JRPickColorView:(JRPickColorView *)pickColorView didSelectColor:(UIColor *)color
 {
     self.edit_drawMenu_color.backgroundColor = color;
     if ([self.delegate respondsToSelector:@selector(lf_editToolbar:drawColorDidChange:)]) {
         [self.delegate lf_editToolbar:self drawColorDidChange:color];
+    }
+}
+
+#pragma mark - 对外
+- (void)selectMainMenuIndex:(NSUInteger)index
+{
+    UIButton *button = [self.edit_menu viewWithTag:index];
+    if ([button isKindOfClass:[UIButton class]]) {
+        [self edit_toolBar_buttonClick:button];
     }
 }
 

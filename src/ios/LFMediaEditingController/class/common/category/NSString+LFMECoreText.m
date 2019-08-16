@@ -102,4 +102,28 @@
     CGContextScaleCTM(context,1.0,-1.0);
 }
 
+//空值字符串显示为@""
++(NSString*) getSafeStrWithStr:(id)str showNull:(NSString*)nullStr
+{
+    NSString *strSafe = [NSString stringWithFormat:@"%@",str];
+    if ([strSafe isEqualToString:@"(null)"]||[[strSafe stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] length]<1 || strSafe==nil||[strSafe isEqual:@""]||[strSafe isEqualToString:@"null"]||strSafe==nil||strSafe==NULL||[strSafe isEqualToString:@" "]) {
+        //        NSLog(@"FAlse");
+        return nullStr;
+    }
+    else
+    {
+        return strSafe;
+    }
+}
+//生成随机uuid
++ (NSString *)uuidString
+{
+    CFUUIDRef uuid_ref = CFUUIDCreate(NULL);
+    CFStringRef uuid_string_ref= CFUUIDCreateString(NULL, uuid_ref);
+    NSString *uuid = [NSString stringWithString:(__bridge NSString *)uuid_string_ref];
+    CFRelease(uuid_ref);
+    CFRelease(uuid_string_ref);
+    return [uuid lowercaseString];
+}
+
 @end

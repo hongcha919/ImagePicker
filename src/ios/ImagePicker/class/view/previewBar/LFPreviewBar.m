@@ -47,6 +47,7 @@
 
 - (void)customInit
 {
+    _selectedDataSource = [NSMutableArray array];
     _borderWidth = 2.f;
     _borderColor = [UIColor blackColor];
     
@@ -99,25 +100,29 @@
 /** 添加数据源 */
 - (void)addAssetInDataSource:(LFAsset *)asset
 {
-    __weak LFPreviewBar *weakSelf = self;
-    [self.collectionView performBatchUpdates:^{
-        [weakSelf.myDataSource addObject:asset];
-        [weakSelf.collectionView insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:weakSelf.myDataSource.count-1 inSection:0]]];
-        
-    } completion:nil];
+    if (asset) {
+        __weak __typeof__(self) weakSelf = self;
+        [self.collectionView performBatchUpdates:^{
+            [weakSelf.myDataSource addObject:asset];
+            [weakSelf.collectionView insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:weakSelf.myDataSource.count-1 inSection:0]]];
+            
+        } completion:nil];
+    }
 }
 /** 删除数据源 */
 - (void)removeAssetInDataSource:(LFAsset *)asset
 {
-    __weak LFPreviewBar *weakSelf = self;
-    [self.collectionView performBatchUpdates:^{
-        NSInteger index = [weakSelf.myDataSource indexOfObject:asset];
-        [weakSelf.myDataSource removeObject:asset];
-        if (index != NSNotFound) {
-            [weakSelf.collectionView deleteItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:index inSection:0]]];
-        }
-        
-    } completion:nil];
+    if (asset) {
+        __weak __typeof__(self) weakSelf = self;
+        [self.collectionView performBatchUpdates:^{
+            NSInteger index = [weakSelf.myDataSource indexOfObject:asset];
+            [weakSelf.myDataSource removeObject:asset];
+            if (index != NSNotFound) {
+                [weakSelf.collectionView deleteItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:index inSection:0]]];
+            }
+            
+        } completion:nil];
+    }
 }
 
 - (void)setSelectAsset:(LFAsset *)selectAsset
@@ -146,10 +151,17 @@
     }
     
     if (indexPaths.count) {
+        __weak __typeof__(self.selectAsset) weakSelectAsset = self.selectAsset;
         [self.collectionView performBatchUpdates:^{
             [self.collectionView reloadItemsAtIndexPaths:indexPaths];
         } completion:^(BOOL finished) {
-            [self.collectionView scrollToItemAtIndexPath:indexPaths.lastObject atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:YES];
+            if (weakSelectAsset) {
+                NSInteger index = [self.myDataSource indexOfObject:weakSelectAsset];
+                if (index != NSNotFound) {
+                    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
+                    [self.collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:YES];
+                }
+            }
         }];
     }
 }
@@ -169,6 +181,7 @@
     LFAsset *asset = self.myDataSource[indexPath.row];
     
     cell.asset = asset;
+    cell.isSelectedAsset = [self.selectedDataSource containsObject:asset];
     
     if (asset == self.selectAsset) {
         cell.layer.borderColor = self.borderColor.CGColor;
@@ -190,13 +203,15 @@
 {
     //取出移动row数据
     LFAsset *asset = self.myDataSource[sourceIndexPath.row];
-    //从数据源中移除该数据
-    [self.myDataSource removeObject:asset];
-    //将数据插入到数据源中的目标位置
-    [self.myDataSource insertObject:asset atIndex:destinationIndexPath.row];
+    if (asset) {
+        //从数据源中移除该数据
+        [self.myDataSource removeObject:asset];
+        //将数据插入到数据源中的目标位置
+        [self.myDataSource insertObject:asset atIndex:destinationIndexPath.row];
+    }
     
     if (self.didMoveItem) {
-        self.didMoveItem(sourceIndexPath.row, destinationIndexPath.row);
+        self.didMoveItem(asset, sourceIndexPath.row, destinationIndexPath.row);
     }
 }
 

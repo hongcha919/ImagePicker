@@ -16,7 +16,7 @@
 #import "LFAsset.h"
 #import "LFResultImage.h"
 #import "LFResultVideo.h"
-
+#import "LFImagePickerPublicHeader.h"
 
 @interface LFAssetManager : NSObject
 
@@ -40,24 +40,22 @@
  *
  *  Get Album 获得相机胶卷相册
  *
- *  @param allowPickingVideo 是否包含视频
- *  @param allowPickingImage 是否包含相片
+ *  @param allowPickingType  媒体类型
  *  @param fetchLimit        相片最大数量（IOS8之后有效）
  *  @param ascending         顺序获取（IOS8之后有效）
  *  @param completion        回调结果
  */
-- (void)getCameraRollAlbum:(BOOL)allowPickingVideo allowPickingImage:(BOOL)allowPickingImage fetchLimit:(NSInteger)fetchLimit ascending:(BOOL)ascending completion:(void (^)(LFAlbum *model))completion;
+- (void)getCameraRollAlbum:(LFPickingMediaType)allowPickingType fetchLimit:(NSInteger)fetchLimit ascending:(BOOL)ascending completion:(void (^)(LFAlbum *model))completion;
 
 
 /**
  Get Album 获得所有相册/相册数组
 
- @param allowPickingVideo 是否包含视频
- @param allowPickingImage 是否包含相片
+ @param allowPickingType  媒体类型
  @param ascending 顺序获取（IOS8之后有效）
  @param completion 回调结果
  */
-- (void)getAllAlbums:(BOOL)allowPickingVideo allowPickingImage:(BOOL)allowPickingImage ascending:(BOOL)ascending completion:(void (^)(NSArray<LFAlbum *> *))completion;
+- (void)getAllAlbums:(LFPickingMediaType)allowPickingType ascending:(BOOL)ascending completion:(void (^)(NSArray<LFAlbum *> *))completion;
 
 /**
  *  @author lincf, 16-07-28 13:07:27
@@ -65,18 +63,16 @@
  *  Get Assets 获得Asset数组
  *
  *  @param result            LFAlbum.result 相册对象
- *  @param allowPickingVideo 是否包含视频
- *  @param allowPickingImage 是否包含相片
+ *  @param allowPickingType  媒体类型
  *  @param fetchLimit        相片最大数量
  *  @param ascending         顺序获取
  *  @param completion        回调结果
  */
-- (void)getAssetsFromFetchResult:(id)result allowPickingVideo:(BOOL)allowPickingVideo allowPickingImage:(BOOL)allowPickingImage fetchLimit:(NSInteger)fetchLimit ascending:(BOOL)ascending completion:(void (^)(NSArray<LFAsset *> *models))completion;
+- (void)getAssetsFromFetchResult:(id)result allowPickingType:(LFPickingMediaType)allowPickingType fetchLimit:(NSInteger)fetchLimit ascending:(BOOL)ascending completion:(void (^)(NSArray<LFAsset *> *models))completion;
 /** 获得下标为index的单个照片 */
 - (void)getAssetFromFetchResult:(id)result
                         atIndex:(NSInteger)index
-              allowPickingVideo:(BOOL)allowPickingVideo
-              allowPickingImage:(BOOL)allowPickingImage
+               allowPickingType:(LFPickingMediaType)allowPickingType
                       ascending:(BOOL)ascending
                      completion:(void (^)(LFAsset *))completion;
 
@@ -113,7 +109,7 @@
  *  @param asset      PHAsset／ALAsset
  *  @param isOriginal 是否原图
  *  @param pickingGif 是否需要处理GIF图片
- *  @param completion 返回block 顺序：缩略图、原图、图片数据字典
+ *  @param completion 返回block 顺序：缩略图、原图、图片数据字典 若返回LFResultObject对象则获取error错误信息。
  */
 - (void)getPhotoWithAsset:(id)asset
                isOriginal:(BOOL)isOriginal
@@ -128,7 +124,7 @@
  @param pickingGif 是否需要处理GIF图片
  @param compressSize 非原图的压缩大小
  @param thumbnailCompressSize 缩略图压缩大小
- @param completion 返回block 顺序：缩略图、标清图、图片数据字典
+ @param completion 返回block 顺序：缩略图、标清图、图片数据字典 若返回LFResultObject对象则获取error错误信息。
  */
 - (void)getPhotoWithAsset:(id)asset
                isOriginal:(BOOL)isOriginal
@@ -151,7 +147,10 @@
 
 /// Get video 获得视频
 - (void)getVideoWithAsset:(id)asset completion:(void (^)(AVPlayerItem * playerItem, NSDictionary * info))completion;
-- (void)getVideoResultWithAsset:(id)asset completion:(void (^)(LFResultVideo *resultVideo))completion;
+- (void)getVideoResultWithAsset:(id)asset
+                     presetName:(NSString *)presetName
+                          cache:(BOOL)cache
+                     completion:(void (^)(LFResultVideo *resultVideo))completion;
 
 /**
  *  @author lincf, 16-06-15 13:06:26
@@ -159,19 +158,22 @@
  *  视频压缩并缓存压缩后视频 (将视频格式变为mp4)
  *
  *  @param asset      PHAsset／ALAsset
+ *  @param presetName 压缩预设名称 nil则默认为AVAssetExportPresetMediumQuality
  *  @param completion 回调压缩后视频路径，可以复制或剪切
  */
-- (void)compressAndCacheVideoWithAsset:(id)asset completion:(void (^)(NSString *path))completion;
+- (void)compressAndCacheVideoWithAsset:(id)asset
+                            presetName:(NSString *)presetName
+                            completion:(void (^)(NSString *path))completion;
 
-
+/// 检查照片的大小是否超过最大值
+- (void)checkPhotosBytesMaxSize:(NSArray <LFAsset *>*)photos maxBytes:(NSInteger)maxBytes completion:(void (^)(BOOL isPass))completion;
 /// Get photo bytes 获得一组照片的大小
-- (void)getPhotosBytesWithArray:(NSArray <LFAsset *>*)photos completion:(void (^)(NSString *totalBytes))completion;
+- (void)getPhotosBytesWithArray:(NSArray <LFAsset *>*)photos completion:(void (^)(NSString *totalBytesStr, NSInteger totalBytes))completion;
 
 /// Judge is a assets array contain the asset 判断一个assets数组是否包含这个asset
 - (NSInteger)isAssetsArray:(NSArray *)assets containAsset:(id)asset;
 
 - (NSString *)getAssetIdentifier:(id)asset;
-- (BOOL)isCameraRollAlbum:(NSString *)albumName;
 
 /// 检查照片大小是否满足最小要求
 - (BOOL)isPhotoSelectableWithAsset:(id)asset;

@@ -1,123 +1,575 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta name="format-detection" content="telephone=no">
-  <meta name="msapplication-tap-highlight" content="no">
-  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
-  <link rel="stylesheet" type="text/css" href="css/index.css">
-  <title>ImagePicker demo</title>
-</head>
-<body>
-<div class="app">
-  <h1>ImagePicker demo</h1>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+<!--    <link rel="stylesheet" type="text/css" href="css/index.css">-->
+    <title>ImagePicker demo</title>
+  </head>
+  <body>
+    <div class="app">
+      <h1>ImagePicker demo</h1>
 
-<!--  <div id="deviceready" class="blink">-->
-<!--    <p class="event listening">Connecting to Device</p>-->
-<!---->
-<!--    <p class="event received">Device is Ready</p>-->
-    <button onclick="getPics0()">get pics cuttype=0</button>
-    <button onclick="getPics1()">get pics cuttype=1</button>
-    <button onclick="getPics()">get pics cuttype=2</button>
+      <button onclick="getPics0()">cuttype=0 , customMinZoomScale=1</button><br>
+      <button onclick="getPics1()">cuttype=1 , customMinZoomScale=1</button><br>
+      <button onclick="getPics()">cuttype=2 , customMinZoomScale=1</button><br>
 
-<!--  </div>-->
-</div>
-<script type="text/javascript" src="cordova.js"></script>
-<script type="text/javascript" src="js/index.js"></script>
-<script>
-    
-    function getPics0() {
-        imagePicker.getPictures(
-                                function (result) {
-                                var content = '';
-                                for (var i = 0; i < result.length; i++) {
-                                content += '<img src="' + result[i] + '" style="max-width:200px"/>';
-                                //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
-                                }
-                                document.getElementById("imageOutput").innerHTML = content;
-                                }, function (error) {
-                                alert('Error: ' + error);
-                                }, {
-                                // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
-                                maximumImagesCount: 1,
-                                width: 400,
-                                height: 500,
-                                // outputType: imagePicker.OutputType.BASE64_STRING
-                                
-                                cutType: 0,
-                                cutWidth: 1,
-                                cutHeigth: 1,
-                                }
-                                );
-    }
+      <button onclick="getPics2()">cuttype=0 , customMinZoomScale=0.1</button><br>
+      <button onclick="getPics3()">cuttype=1 , customMinZoomScale=0.1</button><br>
+      <button onclick="getPics4()">cuttype=2 , customMinZoomScale=0.1</button><br>
 
+      <button onclick="recordAudio()">录制语音</button><br>
+      <button onclick="shootPhoto_Video()">拍摄（照片或视频）</button><br>
+            
+      <button onclick="selectPhoto()">从本地相册选择图片</button><br>
+      <button onclick="selectVideo()">从本地相册选择视频</button><br>
 
-function getPics1() {
-    imagePicker.getPictures(
-                            function (result) {
-                            var content = '';
-                            for (var i = 0; i < result.length; i++) {
-                            content += '<img src="' + result[i] + '" style="max-width:200px"/>';
-                            //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
-                            }
-                            document.getElementById("imageOutput").innerHTML = content;
-                            }, function (error) {
-                            alert('Error: ' + error);
-                            }, {
-                            // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
-                            maximumImagesCount: 1,
-                            width: 400,
-                            height: 500,
-                            // outputType: imagePicker.OutputType.BASE64_STRING
-                            
-                            cutType: 1,
-                            cutWidth: 1,
-                            cutHeigth: 1,
-                            }
-                            );
-}
+      <!--  </div>-->
+    </div><br><br>
+    <script type="text/javascript" src="cordova.js"></script>
+<!--    <script type="text/javascript" src="js/index.js"></script>-->
+    <script>
 
-  function getPics() {
-    imagePicker.getPictures(
-        function (result) {
-          var content = '';
-          for (var i = 0; i < result.length; i++) {
-            content += '<img src="' + result[i] + '" style="max-width:200px"/>';
-            //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
-          }
-          document.getElementById("imageOutput").innerHTML = content;
-        }, function (error) {
-          alert('Error: ' + error);
-        }, {
-          // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
-          maximumImagesCount: 10,         
-          width: 400,
-          height: 500,
-          // outputType: imagePicker.OutputType.BASE64_STRING
-          
-          cutType: 2,
-          // cutWidth: 0,
-          // cutHeigth: 0,
-                            
-          // oKButtonTitleColorNormal: "#1aad19",
-          // oKButtonTitleColorDisabled: "#175216",
-          naviBgColor: "#00ff00",
-          // naviTitleColor: "#ffffff",
-          // barItemTextColor: "#ffffff",
-          // previewNaviBgColor: "#222222e6",
-          // toolbarBgColor: "#1a1a1ae6",
-          // toolbarTitleColorNormal: "#ffffff",
-          // toolbarTitleColorDisabled: "#5c666a",
-          // editNaviBgColor: "#222222e6",
-          // editOKButtonTitleColorNormal: "#1aad19",
-          // editCancelButtonTitleColorNormal: "#cccccc",
-          // editToolbarBgColor: "#1a1a1ae6",
+        function getPics0() {
+            imagePicker.upload(
+                function (result) {
+                    alert(JSON.stringify(result));
+                    result = result.medias;
+                    var content = '';
+                    for (var i = 0; i < result.length; i++) {
+                        console.log();
+                        content += '<img src="' + result[i].originUrl + '" style="max-width:200px"/>';
+                        //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                    }
+                    document.getElementById("imageOutput").innerHTML = content;
+                }, function (error) {
+                    alert('Error: ' + error);
+                }, {
+                    // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                    //公共参数
+                    type:3,//1录音  2录制  3选择图片  4选择视频
+                    serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+                    appid:"",//腾讯云上传appid
+                    region:"ap-guangzhou", //腾讯云存储桶地址
+                    ticket:"", //用户标识
+                    orgId:1,    //机构id
+                    
+                    maximumImagesCount: 1,
+                    width: 400,
+                    height: 500,
+                    // outputType: imagePicker.OutputType.BASE64_STRING
+
+                    cutType: 0,
+                    cutWidth: 1,
+                    cutHeigth: 1,
+                    oKButtonTitleColorNormal:"4e8cee",
+                    oKButtonTitleColorDisabled:"4e8cee",
+                    naviBgColor:"4e8cee",
+                    naviTitleColor:"ffffff",
+                    barItemTextColor:"ffffff",
+                    previewNaviBgColor:"4e8cee",
+                    toolbarBgColor:"4e8cee",
+                    toolbarTitleColorNormal:"ffffff",
+                    toolbarTitleColorDisabled:"ffffff",
+                    editNaviBgColor:"4e8cee",
+                    editOKButtonTitleColorNormal:"ffffff",
+                    editCancelButtonTitleColorNormal:"ffffff",
+                    editToolbarBgColor:"4e8cee",
+                    editToolbarTitleColorNormal:"ffffff",
+                    editToolbarTitleColorDisabled:"ffffff",
+                }
+            );
         }
-    );
-  }
-</script>
 
-<div id="imageOutput">
-</div>
 
-</body>
+        function getPics1() {
+            imagePicker.upload(
+                function (result) {
+                    alert(JSON.stringify(result));
+                    result = result.medias;
+                    var content = '';
+                    for (var i = 0; i < result.length; i++) {
+                        content += '<img src="' + result[i].originUrl + '" style="max-width:200px"/>';
+                        //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                    }
+                    document.getElementById("imageOutput").innerHTML = content;
+                }, function (error) {
+                    alert('Error: ' + error);
+                }, {
+                    // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                    //公共参数
+                    type:3,//1录音  2录制  3选择图片  4选择视频
+                    serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+                    appid:"",//腾讯云上传appid
+                    region:"ap-guangzhou", //腾讯云存储桶地址
+                    ticket:"", //用户标识
+                    orgId:1,    //机构id
+
+                    maximumImagesCount: 1,
+                    width: 400,
+                    height: 500,
+                    // outputType: imagePicker.OutputType.BASE64_STRING
+
+                    cutType: 1,
+                    cutWidth: 1,
+                    cutHeigth: 1,
+                    oKButtonTitleColorNormal:"4e8cee",
+                    oKButtonTitleColorDisabled:"4e8cee",
+                    naviBgColor:"4e8cee",
+                    naviTitleColor:"ffffff",
+                    barItemTextColor:"ffffff",
+                    previewNaviBgColor:"4e8cee",
+                    toolbarBgColor:"4e8cee",
+                    toolbarTitleColorNormal:"ffffff",
+                    toolbarTitleColorDisabled:"ffffff",
+                    editNaviBgColor:"4e8cee",
+                    editOKButtonTitleColorNormal:"ffffff",
+                    editCancelButtonTitleColorNormal:"ffffff",
+                    editToolbarBgColor:"4e8cee",
+                    editToolbarTitleColorNormal:"ffffff",
+                    editToolbarTitleColorDisabled:"ffffff",
+                }
+            );
+        }
+
+        function getPics() {
+            imagePicker.upload(
+                function (result) {
+                    alert(JSON.stringify(result));
+                    result = result.medias;
+                    var content = '';
+                    for (var i = 0; i < result.length; i++) {
+                        content += '<img src="' + result[i].originUrl + '" style="max-width:200px"/>';
+                        //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                    }
+                    document.getElementById("imageOutput").innerHTML = content;
+                }, function (error) {
+                    alert('Error: ' + error);
+                }, {
+                    // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                    //公共参数
+                    type:3,//1录音  2录制  3选择图片  4选择视频
+                    serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+                    appid:"",//腾讯云上传appid
+                    region:"ap-guangzhou", //腾讯云存储桶地址
+                    ticket:"", //用户标识
+                    orgId:1,    //机构id
+
+                    maximumImagesCount: 1,
+                    width: 400,
+                    height: 500,
+                    // outputType: imagePicker.OutputType.BASE64_STRING
+
+                    cutType: 2,
+                    // cutWidth: 0,
+                    // cutHeigth: 0,
+                    oKButtonTitleColorNormal:"4e8cee",
+                    oKButtonTitleColorDisabled:"4e8cee",
+                    naviBgColor:"4e8cee",
+                    naviTitleColor:"ffffff",
+                    barItemTextColor:"ffffff",
+                    previewNaviBgColor:"4e8cee",
+                    toolbarBgColor:"4e8cee",
+                    toolbarTitleColorNormal:"ffffff",
+                    toolbarTitleColorDisabled:"ffffff",
+                    editNaviBgColor:"4e8cee",
+                    editOKButtonTitleColorNormal:"ffffff",
+                    editCancelButtonTitleColorNormal:"ffffff",
+                    editToolbarBgColor:"4e8cee",
+                    editToolbarTitleColorNormal:"ffffff",
+                    editToolbarTitleColorDisabled:"ffffff",
+                }
+            );
+        }
+
+        function getPics2() {
+            imagePicker.upload(
+                function (result) {
+                    alert(JSON.stringify(result));
+                    result = result.medias;
+                    var content = '';
+                    for (var i = 0; i < result.length; i++) {
+                        content += '<img src="' + result[i].originUrl + '" style="max-width:200px"/>';
+                        //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                    }
+                    document.getElementById("imageOutput").innerHTML = content;
+                }, function (error) {
+                    alert('Error: ' + error);
+                }, {
+                    // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                    //公共参数
+                    type:3,//1录音  2录制  3选择图片  4选择视频
+                    serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+                    appid:"",//腾讯云上传appid
+                    region:"ap-guangzhou", //腾讯云存储桶地址
+                    ticket:"", //用户标识
+                    orgId:1,    //机构id
+
+                    maximumImagesCount: 1,
+                    width: 400,
+                    height: 500,
+                    // outputType: imagePicker.OutputType.BASE64_STRING
+
+                    cutType: 0,
+                    cutWidth: 1,
+                    cutHeigth: 1,
+                    customMinZoomScale: 0.1,
+                    oKButtonTitleColorNormal:"4e8cee",
+                    oKButtonTitleColorDisabled:"4e8cee",
+                    naviBgColor:"4e8cee",
+                    naviTitleColor:"ffffff",
+                    barItemTextColor:"ffffff",
+                    previewNaviBgColor:"4e8cee",
+                    toolbarBgColor:"4e8cee",
+                    toolbarTitleColorNormal:"ffffff",
+                    toolbarTitleColorDisabled:"ffffff",
+                    editNaviBgColor:"4e8cee",
+                    editOKButtonTitleColorNormal:"ffffff",
+                    editCancelButtonTitleColorNormal:"ffffff",
+                    editToolbarBgColor:"4e8cee",
+                    editToolbarTitleColorNormal:"ffffff",
+                    editToolbarTitleColorDisabled:"ffffff",
+                }
+            );
+        }
+
+
+        function getPics3() {
+            imagePicker.upload(
+                function (result) {
+                    alert(JSON.stringify(result));
+                    result = result.medias;
+                    var content = '';
+                    for (var i = 0; i < result.length; i++) {
+                        content += '<img src="' + result[i].originUrl + '" style="max-width:200px"/>';
+                        //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                    }
+                    document.getElementById("imageOutput").innerHTML = content;
+                }, function (error) {
+                    alert('Error: ' + error);
+                }, {
+                    // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                    //公共参数
+                    type:3,//1录音  2录制  3选择图片  4选择视频
+                    serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+                    appid:"",//腾讯云上传appid
+                    region:"ap-guangzhou", //腾讯云存储桶地址
+                    ticket:"", //用户标识
+                    orgId:1,    //机构id
+
+                    maximumImagesCount: 1,
+                    width: 400,
+                    height: 500,
+                    // outputType: imagePicker.OutputType.BASE64_STRING
+
+                    cutType: 1,
+                    cutWidth: 1,
+                    cutHeigth: 1,
+                    customMinZoomScale: 0.1,
+                    oKButtonTitleColorNormal:"4e8cee",
+                    oKButtonTitleColorDisabled:"4e8cee",
+                    naviBgColor:"4e8cee",
+                    naviTitleColor:"ffffff",
+                    barItemTextColor:"ffffff",
+                    previewNaviBgColor:"4e8cee",
+                    toolbarBgColor:"4e8cee",
+                    toolbarTitleColorNormal:"ffffff",
+                    toolbarTitleColorDisabled:"ffffff",
+                    editNaviBgColor:"4e8cee",
+                    editOKButtonTitleColorNormal:"ffffff",
+                    editCancelButtonTitleColorNormal:"ffffff",
+                    editToolbarBgColor:"4e8cee",
+                    editToolbarTitleColorNormal:"ffffff",
+                    editToolbarTitleColorDisabled:"ffffff",
+                }
+            );
+        }
+
+        function getPics4() {
+            imagePicker.upload(
+                function (result) {
+                    alert(JSON.stringify(result));
+                    result = result.medias;
+                    var content = '';
+                    for (var i = 0; i < result.length; i++) {
+                        content += '<img src="' + result[i].originUrl + '" style="max-width:200px"/>';
+                        //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                    }
+                    document.getElementById("imageOutput").innerHTML = content;
+                }, function (error) {
+                    alert('Error: ' + error);
+                }, {
+                    // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                    //公共参数
+                    type:3,//1录音  2录制  3选择图片  4选择视频
+                    serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+                    appid:"",//腾讯云上传appid
+                    region:"ap-guangzhou", //腾讯云存储桶地址
+                    ticket:"", //用户标识
+                    orgId:1,    //机构id
+
+                    maximumImagesCount: 1,
+                    width: 400,
+                    height: 500,
+                    // outputType: imagePicker.OutputType.BASE64_STRING
+
+                    cutType: 2,
+                    // cutWidth: 0,
+                    // cutHeigth: 0,
+                    customMinZoomScale: 0.1,
+                    oKButtonTitleColorNormal:"4e8cee",
+                    oKButtonTitleColorDisabled:"4e8cee",
+                    naviBgColor:"4e8cee",
+                    naviTitleColor:"ffffff",
+                    barItemTextColor:"ffffff",
+                    previewNaviBgColor:"4e8cee",
+                    toolbarBgColor:"4e8cee",
+                    toolbarTitleColorNormal:"ffffff",
+                    toolbarTitleColorDisabled:"ffffff",
+                    editNaviBgColor:"4e8cee",
+                    editOKButtonTitleColorNormal:"ffffff",
+                    editCancelButtonTitleColorNormal:"ffffff",
+                    editToolbarBgColor:"4e8cee",
+                    editToolbarTitleColorNormal:"ffffff",
+                    editToolbarTitleColorDisabled:"ffffff",
+                }
+            );
+        }
+
+        function recordAudio() {
+            imagePicker.upload(
+                function(result){
+                    alert(JSON.stringify(result));
+                    result = result.medias;
+                    let result1 = result[0];
+                    if (result1.mediaType == 0) { //视频
+                        var content = '';
+                        for (var i = 0; i < result.length; i++) {
+                            content += '<video src="' + result[i].videoUrl + '" controls="controls"/>';
+                            //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                        }
+                        document.getElementById("imageOutput").innerHTML = content;
+                    }else if (result1.mediaType == 1) { //图片
+                        var content = '';
+                        for (var i = 0; i < result.length; i++) {
+                            content += '<img src="' + result[i].originUrl + '" style="max-width:200px"/>';
+                            //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                        }
+                        document.getElementById("imageOutput").innerHTML = content;
+                    }else if (result1.mediaType == 2) { //音频
+                        var content = '';
+                        for (var i = 0; i < result.length; i++) {
+                            content += '<audio src="' + result[i].mediaUrl + '" controls="controls"/>';
+                            //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                        }
+                        document.getElementById("imageOutput").innerHTML = content;
+                    };
+                },
+                function (error) {
+                    alert('Error: ' + error);
+                }, {
+                    // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                    //公共参数
+                    type:1,//1录音  2录制  3选择图片  4选择视频
+                    serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+                    appid:"",//腾讯云上传appid
+                    region:"ap-guangzhou", //腾讯云存储桶地址
+                    ticket:"", //用户标识
+                    orgId:1,    //机构id
+
+                    duration: 60,//允许录制最大长度，默认为60s
+
+                    oKButtonTitleColorNormal:"4e8cee",
+                    oKButtonTitleColorDisabled:"4e8cee",
+                    naviBgColor:"4e8cee",
+                    naviTitleColor:"ffffff",
+                    barItemTextColor:"ffffff",
+                    previewNaviBgColor:"4e8cee",
+                    toolbarBgColor:"4e8cee",
+                    toolbarTitleColorNormal:"ffffff",
+                    toolbarTitleColorDisabled:"ffffff",
+                    editNaviBgColor:"4e8cee",
+                    editOKButtonTitleColorNormal:"ffffff",
+                    editCancelButtonTitleColorNormal:"ffffff",
+                    editToolbarBgColor:"4e8cee",
+                    editToolbarTitleColorNormal:"ffffff",
+                    editToolbarTitleColorDisabled:"ffffff",
+                }
+            );
+        }
+        
+        function shootPhoto_Video() {
+            //下载镜像
+            imagePicker.upload(
+                function(result){
+                    alert(JSON.stringify(result));
+                    result = result.medias;
+                    let result1 = result[0];
+                    if (result1.mediaType == 0) { //视频
+                        var content = '';
+                        for (var i = 0; i < result.length; i++) {
+                            content += '<video src="' + result[i].videoUrl + '" controls="controls"/>';
+                            //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                        }
+                        document.getElementById("imageOutput").innerHTML = content;
+                    }else if (result1.mediaType == 1) { //图片
+                        var content = '';
+                        for (var i = 0; i < result.length; i++) {
+                            content += '<img src="' + result[i].originUrl + '" style="max-width:200px"/>';
+                            //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                        }
+                        document.getElementById("imageOutput").innerHTML = content;
+                    }else if (result1.mediaType == 2) { //音频
+                        var content = '';
+                        for (var i = 0; i < result.length; i++) {
+                            content += '<audio src="' + result[i].mediaUrl + '" controls="controls"/>';
+                            //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                        }
+                        document.getElementById("imageOutput").innerHTML = content;
+                    };
+                },
+                function (error) {
+                    alert('Error: ' + error);
+                }, {
+                    // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                    //公共参数
+                    type:2,//1录音  2录制  3选择图片  4选择视频
+                    serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+                    appid:"",//腾讯云上传appid
+                    region:"ap-guangzhou", //腾讯云存储桶地址
+                    ticket:"", //用户标识
+                    orgId:1,    //机构id
+
+                    duration: 60,//允许录制上传最大长度，默认为60s
+
+                    // outputType: imagePicker.OutputType.BASE64_STRING
+                    maxLen:10,
+
+                    cutType: 2,
+                    cutWidth: 1,
+                    cutHeigth: 1,
+                    oKButtonTitleColorNormal:"4e8cee",
+                    oKButtonTitleColorDisabled:"4e8cee",
+                    naviBgColor:"4e8cee",
+                    naviTitleColor:"ffffff",
+                    barItemTextColor:"ffffff",
+                    previewNaviBgColor:"4e8cee",
+                    toolbarBgColor:"4e8cee",
+                    toolbarTitleColorNormal:"ffffff",
+                    toolbarTitleColorDisabled:"ffffff",
+                    editNaviBgColor:"4e8cee",
+                    editOKButtonTitleColorNormal:"ffffff",
+                    editCancelButtonTitleColorNormal:"ffffff",
+                    editToolbarBgColor:"4e8cee",
+                    editToolbarTitleColorNormal:"ffffff",
+                    editToolbarTitleColorDisabled:"ffffff",
+                }
+            );
+        }
+        
+        function selectPhoto() {
+            imagePicker.upload(
+                function(result){
+                    alert(JSON.stringify(result));
+                    result = result.medias;
+                    var content = '';
+                    for (var i = 0; i < result.length; i++) {
+                        content += '<img src="' + result[i].originUrl + '" style="max-width:200px"/>';
+                        //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                    }
+                    document.getElementById("imageOutput").innerHTML = content;
+                },
+                function (error) {
+                    alert('Error: ' + error);
+                }, {
+                    // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                    //公共参数
+                    type:3,//1录音  2录制  3选择图片  4选择视频
+                    serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+                    appid:"",//腾讯云上传appid
+                    region:"ap-guangzhou", //腾讯云存储桶地址
+                    ticket:"", //用户标识
+                    orgId:1,    //机构id
+
+                    maximumImagesCount:10,
+                    customMinZoomScale:1,
+
+                    // outputType: imagePicker.OutputType.BASE64_STRING
+                    cutType: 2,
+                    cutWidth: 1,
+                    cutHeigth: 1,
+                    oKButtonTitleColorNormal:"4e8cee",
+                    oKButtonTitleColorDisabled:"4e8cee",
+                    naviBgColor:"4e8cee",
+                    naviTitleColor:"ffffff",
+                    barItemTextColor:"ffffff",
+                    previewNaviBgColor:"4e8cee",
+                    toolbarBgColor:"4e8cee",
+                    toolbarTitleColorNormal:"ffffff",
+                    toolbarTitleColorDisabled:"ffffff",
+                    editNaviBgColor:"4e8cee",
+                    editOKButtonTitleColorNormal:"ffffff",
+                    editCancelButtonTitleColorNormal:"ffffff",
+                    editToolbarBgColor:"4e8cee",
+                    editToolbarTitleColorNormal:"ffffff",
+                    editToolbarTitleColorDisabled:"ffffff",
+                }
+            );
+        }
+        
+        function selectVideo() {
+            imagePicker.upload(
+                function(result){
+                    alert(JSON.stringify(result));
+                    result = result.medias;
+                    var content = '';
+                    for (var i = 0; i < result.length; i++) {
+                        content += '<video src="' + result[i].videoUrl + '" controls="controls"/>';
+                        //content += '<img src="data:image/jpg;base64,'+result[i]+'" style="max-width:200px"/>';
+                    }
+                    document.getElementById("imageOutput").innerHTML = content;
+                },
+                function (error) {
+                    alert('Error: ' + error);
+                }, {
+                    // if no title is passed, the plugin should use a sane default (preferrably the same as it was, so check the old one.. there are screenshots in the marketplace doc)
+                    //公共参数
+                    type:4,//1录音  2录制  3选择图片  4选择视频
+                    serverUrl:"http://api.121wty.com/test/jserver",//服务端地址(测服，线上服地址以后可能会改)
+                    appid:"",//腾讯云上传appid
+                    region:"ap-guangzhou", //腾讯云存储桶地址
+                    ticket:"", //用户标识
+                    orgId:1,    //机构id
+
+                    duration: 60,
+                    maximumVideosCount:1,
+
+                    oKButtonTitleColorNormal:"4e8cee",
+                    oKButtonTitleColorDisabled:"4e8cee",
+                    naviBgColor:"4e8cee",
+                    naviTitleColor:"ffffff",
+                    barItemTextColor:"ffffff",
+                    previewNaviBgColor:"4e8cee",
+                    toolbarBgColor:"4e8cee",
+                    toolbarTitleColorNormal:"ffffff",
+                    toolbarTitleColorDisabled:"ffffff",
+                    editNaviBgColor:"4e8cee",
+                    editOKButtonTitleColorNormal:"ffffff",
+                    editCancelButtonTitleColorNormal:"ffffff",
+                    editToolbarBgColor:"4e8cee",
+                    editToolbarTitleColorNormal:"ffffff",
+                    editToolbarTitleColorDisabled:"ffffff",
+                }
+            );
+        }
+
+    </script>
+
+    <div id="imageOutput">
+        
+    </div>
+
+  </body>
 </html>

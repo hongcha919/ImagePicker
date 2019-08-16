@@ -36,6 +36,8 @@
 
 @property (nonatomic, assign) float customMinZoomScale;
 @property (nonatomic, assign) NSInteger cutType;//0 圆形；1矩形
+/** 是否允许编辑 默认NO */
+@property (nonatomic, assign) BOOL allowEditing;
 
 /** 缩小到指定坐标 */
 - (void)zoomOutToRect:(CGRect)toRect;

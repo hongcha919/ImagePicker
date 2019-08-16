@@ -154,7 +154,7 @@ NSString *const kLFZoomingViewData_splash = @"LFZoomingViewData_splash";
         };
         
         /** 贴图 */
-        _stickerView.tapEnded = ^(BOOL isActive){
+        _stickerView.tapEnded = ^(LFStickerItem *item, BOOL isActive){
             if ([weakSelf.delegate respondsToSelector:@selector(lf_photoEditStickerDidSelectViewIsActive:)]) {
                 [weakSelf.delegate lf_photoEditStickerDidSelectViewIsActive:isActive];
             }

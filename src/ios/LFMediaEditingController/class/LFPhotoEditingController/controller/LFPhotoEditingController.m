@@ -420,16 +420,16 @@
     if (NSClassFromString(@"UIAlertController")) {
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
         [alertController addAction:[UIAlertAction actionWithTitle:self.cancelButtonTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-            _edit_clipping_toolBar.selectAspectRatio = NO;
-            [_EditingView setAspectRatio:nil];
+            self->_edit_clipping_toolBar.selectAspectRatio = NO;
+            [self->_EditingView setAspectRatio:nil];
         }]];
         
         //Add each item to the alert controller
         for (NSInteger i=0; i<items.count; i++) {
             NSString *item = items[i];
             UIAlertAction *action = [UIAlertAction actionWithTitle:item style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                _edit_clipping_toolBar.selectAspectRatio = YES;
-                [_EditingView setAspectRatio:item];
+                self->_edit_clipping_toolBar.selectAspectRatio = YES;
+                [self->_EditingView setAspectRatio:item];
             }];
             [alertController addAction:action];
         }
@@ -606,9 +606,9 @@
     [self changeStickerMenu:NO];
     
     [UIView animateWithDuration:.25f animations:^{
-        CGFloat alpha = _isHideNaviBar ? 0.f : 1.f;
-        _edit_naviBar.alpha = alpha;
-        _edit_toolBar.alpha = alpha;
+        CGFloat alpha = self->_isHideNaviBar ? 0.f : 1.f;
+        self->_edit_naviBar.alpha = alpha;
+        self->_edit_toolBar.alpha = alpha;
     }];
 }
 
@@ -658,8 +658,8 @@
         [UIView animateWithDuration:.25f animations:^{
             self.edit_sticker_toolBar.frame = frame;
         } completion:^(BOOL finished) {
-            [_edit_sticker_toolBar removeFromSuperview];
-            _edit_sticker_toolBar = nil;
+            [self->_edit_sticker_toolBar removeFromSuperview];
+            self->_edit_sticker_toolBar = nil;
         }];
     }
 }
@@ -684,7 +684,7 @@
         textBar.y = 0;
     } completion:^(BOOL finished) {
         /** 隐藏顶部栏 */
-        _isHideNaviBar = YES;
+        self->_isHideNaviBar = YES;
         [self changedBarState];
     }];
 }

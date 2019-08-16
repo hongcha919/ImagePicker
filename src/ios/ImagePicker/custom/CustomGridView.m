@@ -11,6 +11,7 @@
 #import "LFGridMaskLayer.h"
 #import "LFResizeControl.h"
 #import <AVFoundation/AVFoundation.h>
+#import "UIView+LFFrame.h"
 
 /** 可控范围 */
 const CGFloat customControlWidth = 30.f;
@@ -57,6 +58,7 @@ const CGFloat customControlWidth = 30.f;
     LFGridMaskLayer *gridMaskLayer = [[LFGridMaskLayer alloc] init];
     gridMaskLayer.frame = self.bounds;
     gridMaskLayer.maskColor = [UIColor colorWithWhite:.0f alpha:.5f].CGColor;
+    gridMaskLayer.cutType = _cutType;
     [self.layer addSublayer:gridMaskLayer];
     self.gridMaskLayer = gridMaskLayer;
     
@@ -111,6 +113,7 @@ const CGFloat customControlWidth = 30.f;
 {
     _cutType = cutType;
     self.gridLayer.cutType = cutType;
+    self.gridMaskLayer.cutType = cutType;
     if (_cutType<=1) {
         self.gridLayer.lineDashPatternAry = @[@4, @6];
     }
@@ -403,6 +406,9 @@ const CGFloat customControlWidth = 30.f;
     /** 限制宽度／高度 超出 最大限度 */
     if (ceil(rect.origin.x+rect.size.width) > ceil(CGRectGetMaxX(_controlMaxRect))) {
         rect.size.width = CGRectGetMaxX(_controlMaxRect) - CGRectGetMinX(rect);
+//        if (LF_IS_IPHONE_X) {
+//            rect.origin.y += 20;
+//        }
     }
     if (ceil(rect.origin.y+rect.size.height) > ceil(CGRectGetMaxY(_controlMaxRect))) {
         rect.size.height = CGRectGetMaxY(_controlMaxRect) - CGRectGetMinY(rect);
@@ -464,6 +470,17 @@ const CGFloat customControlWidth = 30.f;
             rect.origin.x = self.initialRect.origin.x;
             rect.size.width = rect.size.height * widthRatio;
         }
+    }
+    
+//    if (LF_IS_IPHONE_X)
+    {
+        if (rect.origin.y <= LF_NavBarHeight) {
+            rect.origin.y = LF_NavBarHeight+5;
+        }
+        if (rect.size.height >= ([UIScreen mainScreen].bounds.size.height- LF_NavBarHeight - LF_TabbarHeight)) {
+            rect.size.height = [UIScreen mainScreen].bounds.size.height- LF_NavBarHeight - LF_TabbarHeight-5;
+        }
+        
     }
     
     return rect;

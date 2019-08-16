@@ -7,7 +7,7 @@
 //
 
 #import "LFBaseEditingController.h"
-
+#import "LFMediaEditingHeader.h"
 #import "UIDevice+LFMEOrientation.h"
 
 @interface LFBaseEditingController ()
@@ -17,6 +17,8 @@
     UIView *_HUDContainer;
     UIActivityIndicatorView *_HUDIndicatorView;
     UILabel *_HUDLabel;
+    UIProgressView *_ProgressView;
+    
 }
 /** 默认编辑屏幕方向 */
 @property (nonatomic, assign) UIInterfaceOrientation orientation;
@@ -36,6 +38,7 @@
     self = [super init];
     if (self) {
         _orientation = orientation;
+
         /** 因数据可以多次重复编辑，暂时未能处理横竖屏切换的问题。 */
         [UIDevice LFME_setOrientation:orientation];
         _oKButtonTitleColorNormal = [UIColor colorWithRed:(26/255.0) green:(173/255.0) blue:(25/255.0) alpha:1.0];
@@ -48,6 +51,7 @@
         _oKButtonTitle = @"完成";
         _cancelButtonTitle = @"取消";
         _processHintStr = @"正在处理...";
+        
     }
     return self;
 }
@@ -55,6 +59,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    NSAssert(self.navigationController, @"You must wrap it with UINavigationController");
+    self.view.backgroundColor = [UIColor blackColor];
 }
 
 - (void)dealloc
@@ -70,7 +76,7 @@
 #pragma mark - 状态栏
 - (UIStatusBarStyle)preferredStatusBarStyle
 {
-    return self.isHiddenStatusBar ? UIStatusBarStyleDefault : UIStatusBarStyleLightContent;
+    return UIStatusBarStyleDefault;
 }
 
 - (BOOL)prefersStatusBarHidden
@@ -99,7 +105,7 @@
 }
 
 #pragma mark - private
-- (void)showProgressHUDText:(NSString *)text isTop:(BOOL)isTop
+- (void)showProgressHUDText:(NSString *)text isTop:(BOOL)isTop needProcess:(BOOL)needProcess
 {
     [self hideProgressHUD];
     
@@ -128,8 +134,15 @@
         [_HUDContainer addSubview:_HUDIndicatorView];
         [_progressHUD addSubview:_HUDContainer];
     }
+    if (needProcess) {
+        _HUDContainer.frame = CGRectMake(([[UIScreen mainScreen] bounds].size.width - 120) / 2, ([[UIScreen mainScreen] bounds].size.height - 90) / 2, 120.f, 100.f);
+        if (!_ProgressView) {
+            _ProgressView = [[UIProgressView alloc] initWithFrame:CGRectMake(10.f, CGRectGetMaxY(_HUDLabel.frame), CGRectGetWidth(_HUDContainer.frame)-20.f, 2.5f)];
+            [_HUDContainer addSubview:_ProgressView];
+        }
+    }
     
-    _HUDLabel.text = text ? text : self.processHintStr;
+    _HUDLabel.text = text ? text : [NSBundle LFME_localizedStringForKey:@"_LFME_processHintStr"];
     
     [_HUDIndicatorView startAnimating];
     UIView *view = isTop ? [[UIApplication sharedApplication] keyWindow] : self.view;
@@ -138,20 +151,29 @@
 
 - (void)showProgressHUDText:(NSString *)text
 {
-    [self showProgressHUDText:text isTop:NO];
+    [self showProgressHUDText:text isTop:NO needProcess:NO];
 }
 
-- (void)showProgressHUD {
-    
-    [self showProgressHUDText:nil];
-    
+- (void)showProgressHUD
+{
+    [self showProgressHUDText:nil isTop:NO needProcess:NO];
 }
 
 - (void)hideProgressHUD {
     if (_progressHUD) {
         [_HUDIndicatorView stopAnimating];
         [_progressHUD removeFromSuperview];
+        [_ProgressView setProgress:0.f];
     }
 }
 
+- (void)showProgressVideoHUD
+{
+    [self showProgressHUDText:nil isTop:NO needProcess:YES];
+}
+
+- (void)setProgress:(float)progress
+{
+    [_ProgressView setProgress:progress animated:YES];
+}
 @end

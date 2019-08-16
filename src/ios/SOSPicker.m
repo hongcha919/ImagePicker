@@ -8,12 +8,16 @@
 
 #import "SOSPicker.h"
 
-
 #import "LFImagePickerController.h"
-
+#import "AudioRecordVC.h"
+#import "XFCameraController.h"
 #import "UIImage+LF_Format.h"
 #import "LFAssetManager.h"
 #import "LFAssetManager+CreateMedia.h"
+#import "NSString+LFMECoreText.h"
+#import "PublicParamsKey.h"
+//#import <MediaPickerUpload/MediaPickerUpload.h>
+
 
 #define CDV_PHOTO_PREFIX @"cdv_photo_"
 
@@ -56,77 +60,314 @@ typedef enum : NSUInteger {
 }
 
 - (void) getPictures:(CDVInvokedUrlCommand *)command {
-
     NSDictionary *options = [command.arguments objectAtIndex: 0];
+    if (!options || options.count == 0) {
+        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"参数不能为空！"];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+    }
     
+    //处理保存上传公共参数
+    [self dealPublicUploadParams:options];
+    
+    //输出格式：0.文件绝对路径 1.BASE64_STRING
     self.outputType = [[options objectForKey:@"outputType"] integerValue];
-    
+    //最多选择个数
     self.maximumImagesCount = [[options objectForKey:@"maximumImagesCount"] integerValue];
     self.width = [[options objectForKey:@"width"] integerValue];
     self.height = [[options objectForKey:@"height"] integerValue];
     self.quality = [[options objectForKey:@"quality"] integerValue];
-
+    //图片裁剪形状(1圆形;2正方形;3矩形)
     self.cutType = [[options objectForKey:@"cutType"] integerValue];
     NSInteger cutWidth = [[options objectForKey:@"cutWidth"] integerValue];
     NSInteger cutHeigth = [[options objectForKey:@"cutHeigth"] integerValue];
-
+    
     self.callbackId = command.callbackId;
-    [self launchImagePicker:false maximumImagesCount:self.maximumImagesCount cutType:self.cutType cutWidth:cutWidth cutHeigth:cutHeigth options:options];
+    [self launchImagePicker:LFPickingMediaTypePhoto maximumImagesCount:self.maximumImagesCount maximumVideosCount:1 cutType:self.cutType cutWidth:cutWidth cutHeigth:cutHeigth options:options];
 }
 
-- (void)launchImagePicker:(bool)allow_video maximumImagesCount:(NSInteger)maximumImagesCount cutType:(NSInteger)cutType cutWidth:(NSInteger)cutWidth cutHeigth:(NSInteger)cutHeigth options:(NSDictionary *)options
+- (void) getAudio:(CDVInvokedUrlCommand *)command {
+    
+    NSDictionary *options = [command.arguments objectAtIndex: 0];
+    if (!options || options.count == 0) {
+        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"参数不能为空！"];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+    }
+    
+    self.callbackId = command.callbackId;
+    
+    //处理保存上传公共参数
+    [self dealPublicUploadParams:options];
+    
+    AudioRecordVC *audioVC = [[AudioRecordVC alloc] init];
+    if (options[@"duration"] && [options[@"duration"] intValue] >0) {
+        audioVC.maxRecTime = [options[@"duration"] intValue];
+    }else{
+        audioVC.maxRecTime = 60;
+    }
+    audioVC.isGetCloudRes = YES;
+    audioVC.backButtonClickBlock = ^{
+
+    };
+    audioVC.doneButtonClickBlock = ^(NSMutableArray * _Nonnull resultArray) {
+        NSLog(@"resultArray....%@", resultArray);
+        CDVPluginResult* result  = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{@"medias":resultArray}];
+        [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+    };
+    self.callbackId = command.callbackId;
+    [self.viewController presentViewController:audioVC animated:YES completion:^{
+        
+    }];
+}
+
+- (void) getVideos:(CDVInvokedUrlCommand *)command {
+    NSDictionary *options = [command.arguments objectAtIndex: 0];
+    if (!options || options.count == 0) {
+        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"参数不能为空！"];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+    }
+    
+    //处理保存上传公共参数
+    [self dealPublicUploadParams:options];
+    
+    NSInteger maxVideoCount = 1;
+    if (options[@"maximumVideosCount"] && [options[@"maximumVideosCount"] integerValue] > 0) {
+        maxVideoCount =  [options[@"maximumVideosCount"] integerValue];
+    }
+    
+    self.callbackId = command.callbackId;
+    [self launchImagePicker:LFPickingMediaTypeVideo maximumImagesCount:1 maximumVideosCount:maxVideoCount cutType:self.cutType cutWidth:0 cutHeigth:0 options:options];
+}
+
+- (void) shootPhoto_Video:(CDVInvokedUrlCommand *)command {
+    self.callbackId = command.callbackId;
+    NSDictionary *options = [command.arguments objectAtIndex: 0];
+    if (!options || options.count == 0) {
+        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"参数不能为空！"];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+    }
+    
+    //处理保存上传公共参数
+    [self dealPublicUploadParams:options];
+    
+    //输出格式：0.文件绝对路径 1.BASE64_STRING
+    self.outputType = [[options objectForKey:@"outputType"] integerValue];
+    //最多选择个数
+    self.maximumImagesCount = [[options objectForKey:@"maximumImagesCount"] integerValue];
+    self.width = [[options objectForKey:@"width"] integerValue];
+    self.height = [[options objectForKey:@"height"] integerValue];
+    self.quality = [[options objectForKey:@"quality"] integerValue];
+    //图片裁剪形状(1圆形;2正方形;3矩形)
+    self.cutType = [[options objectForKey:@"cutType"] integerValue];
+    NSInteger cutWidth = [[options objectForKey:@"cutWidth"] integerValue];
+    NSInteger cutHeigth = [[options objectForKey:@"cutHeigth"] integerValue];
+    
+    
+    XFCameraController *cameraController = [XFCameraController defaultCameraController];
+    if (options[@"duration"] && [options[@"duration"] doubleValue] >0) {
+        cameraController.maxRecTime = [options[@"duration"] doubleValue];
+    }else{
+        cameraController.maxRecTime = 60;
+    }
+    cameraController.isGetCloudRes = YES;
+    if (options[@"customMinZoomScale"] && [options[@"customMinZoomScale"] doubleValue] >0) {
+        cameraController.customMinZoomScale = [options[@"customMinZoomScale"] floatValue];
+    }else{
+        cameraController.customMinZoomScale = 1;
+    }
+    cameraController.cutType = self.cutType;
+    if ((cutWidth<=0 || cutHeigth<=0) || self.cutType>1) {
+        cameraController.aspectWHRatio = 0;
+    } else {
+        cameraController.aspectWHRatio = cutWidth*1.0/cutHeigth*1.0;
+    }
+    cameraController.editNaviBgColor = [self colorWithHexString:[options objectForKey:@"editNaviBgColor"]];
+    cameraController.editOKButtonTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editOKButtonTitleColorNormal"]];
+    cameraController.editCancelButtonTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editCancelButtonTitleColorNormal"]];
+    cameraController.editToolbarBgColor = [self colorWithHexString:[options objectForKey:@"editToolbarBgColor"]];
+    cameraController.editToolbarTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editToolbarTitleColorNormal"]];
+    cameraController.editToolbarTitleColorDisabled = [self colorWithHexString:[options objectForKey:@"editToolbarTitleColorDisabled"]];
+    
+//    __weak XFCameraController *weakCameraController = cameraController;
+    //获取云端图片资源回调
+    cameraController.shootCloudCompletionBlock = ^(NSMutableArray *resultArray) {
+        NSLog(@"resultArray....%@", resultArray);
+        CDVPluginResult* result  = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{@"medias":resultArray}];
+        [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+    };
+    cameraController.takePhotosCloudCompletionBlock = ^(NSMutableArray *resultArray) {
+        NSLog(@"resultArray....%@", resultArray);
+        CDVPluginResult* result  = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{@"medias":resultArray}];
+        [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+    };
+    //获取本地图片资源回调
+    cameraController.takePhotosCompletionBlock = ^(UIImage *image, NSError *error) {
+        NSLog(@"takePhotosCompletionBlock");
+    };
+    cameraController.shootCompletionBlock = ^(NSURL *videoUrl, CGFloat videoTimeLength, UIImage *thumbnailImage, NSError *error) {
+        NSLog(@"shootCompletionBlock");
+    };
+    [self.viewController presentViewController:cameraController animated:YES completion:nil];
+}
+
+/**
+ 上传文件
+ 
+ @param command 交互对象
+ */
+- (void) upload:(CDVInvokedUrlCommand *)command {
+    NSDictionary *options = [command.arguments objectAtIndex: 0];
+    if (!options || options.count == 0) {
+        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"参数不能为空！"];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+    }
+    
+    int type = [options[@"type"] intValue];
+    if (type == 1) { //录制音频
+        [self getAudio:command];
+    }else if (type == 2) { //录制视频及拍照
+        [self shootPhoto_Video:command];
+    }else if (type == 4) { //选择视频上传
+        [self getVideos:command];
+    }else { //选择图片上传
+        [self getPictures:command];
+    }
+    
+}
+
+#pragma mark 私有方法
+
+/**
+ 根据参数处理上传公共参数
+
+ @param options 参数
+ */
+-(void)dealPublicUploadParams:(NSDictionary *)options {
+    if (!options) {
+        return;
+    }
+    /*    获取公共参数    */
+    //服务端地址(测服，线上服地址以后可能会改)
+    NSString *serverUrl = [NSString getSafeStrWithStr:options[@"serverUrl"] showNull:@"http://api.121wty.com/test/jserver"];
+    [[NSUserDefaults standardUserDefaults] setObject:serverUrl forKey:serverUrlKey_plugin];
+    //腾讯云存储桶地址
+    NSString *region = [NSString getSafeStrWithStr:options[@"region"] showNull:@"ap-guangzhou"];
+    [[NSUserDefaults standardUserDefaults] setObject:region forKey:regionKey_plugin];
+    //腾讯云上传appid
+    NSString *appId = [NSString getSafeStrWithStr:options[@"appid"] showNull:@""];
+    [[NSUserDefaults standardUserDefaults] setObject:appId forKey:appIdKey_plugin];
+    //用户标识
+    NSString *ticket = [NSString getSafeStrWithStr:options[@"ticket"] showNull:@""];
+    [[NSUserDefaults standardUserDefaults] setObject:ticket forKey:ticketKey_plugin];
+    //test 测试 release 线上
+    NSString *environment = [NSString getSafeStrWithStr:options[@"environment"] showNull:@"test"];
+    [[NSUserDefaults standardUserDefaults] setObject:environment forKey:environmentKey_plugin];
+    //机构id
+    if (options[@"orgId"] && [options[@"orgId"] intValue] > 0) {
+        [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInt:[options[@"orgId"] intValue]] forKey:orgIdKey_plugin];
+    }else{
+        [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInt:1] forKey:orgIdKey_plugin];
+    }
+}
+
+- (void)launchImagePicker:(LFPickingMediaType)mediaType maximumImagesCount:(NSInteger)maximumImagesCount maximumVideosCount:(NSInteger)maximumVideosCount cutType:(NSInteger)cutType cutWidth:(NSInteger)cutWidth cutHeigth:(NSInteger)cutHeigth options:(NSDictionary *)options
 {
     LFImagePickerController *imagePicker = [[LFImagePickerController alloc] initWithMaxImagesCount:9 delegate:self];
     imagePicker.allowTakePicture = NO;
+//    imagePicker.autoSavePhotoAlbum = YES;
     //    imagePicker.sortAscendingByCreateDate = NO;
     //    imagePicker.allowEditing = NO;
     imagePicker.supportAutorotate = NO; /** 适配横屏 */
     //    imagePicker.imageCompressSize = 200; /** 标清图压缩大小 */
     //    imagePicker.thumbnailCompressSize = 20; /** 缩略图压缩大小 */
-    imagePicker.allowPickingGif = NO; /** 支持GIF */
-    imagePicker.allowPickingLivePhoto = NO; /** 支持Live Photo */
-    //    imagePicker.autoSelectCurrentImage = NO; /** 关闭自动选中 */
+    imagePicker.allowPickingType = mediaType;//LFPickingMediaTypeALL; /** 支持GIF */
+//    imagePicker.allowPickingLivePhoto = NO; /** 支持Live Photo */
+        imagePicker.autoSelectCurrentImage = NO; /** 关闭自动选中 */
     //    imagePicker.defaultAlbumName = @"123"; /** 指定默认显示相册 */
     //    imagePicker.displayImageFilename = YES; /** 显示文件名称 */
-    imagePicker.allowPickingVideo = NO;
-    imagePicker.customMinZoomScale = [[options objectForKey:@"customMinZoomScale"] floatValue];
-
+//    imagePicker.allowPickingVideo = YES;
+    if (options[@"customMinZoomScale"] && [options[@"customMinZoomScale"] doubleValue] >0) {
+        imagePicker.customMinZoomScale = [options[@"customMinZoomScale"] floatValue];
+    }else{
+        imagePicker.customMinZoomScale = 1;
+    }
+    imagePicker.isGetCloudPath = YES;
+    
     imagePicker.maxImagesCount = maximumImagesCount;
+    if (imagePicker.allowPickingType == LFPickingMediaTypeVideo) {
+        imagePicker.autoSavePhotoAlbum = YES;
+        imagePicker.maxVideosCount = maximumVideosCount;
+        if (options[@"duration"] && [options[@"duration"] doubleValue] >0) {
+            imagePicker.maxVideoDuration = [options[@"duration"] doubleValue];
+        }else{
+            imagePicker.maxVideoDuration = 60;
+        }
+    }else{
+        if (cutType>1) {
+            imagePicker.autoSavePhotoAlbum = YES;
+        }else{
+            imagePicker.autoSavePhotoAlbum = NO;
+        }
+        imagePicker.isSelectOriginalPhoto = YES;
+    }
     imagePicker.cutType = cutType;
-    if ((cutWidth==0 || cutHeigth==0) || cutType>1) {
+    if ((cutWidth<=0 || cutHeigth<=0) || cutType>1) {
         imagePicker.aspectWHRatio = 0;
     } else {
         imagePicker.aspectWHRatio = cutWidth*1.0/cutHeigth*1.0;
     }
-    if (imagePicker.maxImagesCount==1 && imagePicker.cutType<=1) {
+    if (imagePicker.maxImagesCount==1 /*&& imagePicker.cutType<=1*/) {
         imagePicker.allowPickingOriginalPhoto = NO;
     }
     if ([UIDevice currentDevice].systemVersion.floatValue >= 8.0f) {
         imagePicker.syncAlbum = YES; /** 实时同步相册 */
     }
     
+//    //底部按钮背景色
+//    imagePicker.oKButtonTitleColorNormal = [self colorWithHexString:@"4e8cee"];
+//    imagePicker.oKButtonTitleColorDisabled = [self colorWithHexString:@"4e8cee"];
+//    //导航栏背景色
+//    imagePicker.naviBgColor = [self colorWithHexString:@"4e8cee"];
+//    imagePicker.naviTitleColor = [UIColor whiteColor];
+//    imagePicker.barItemTextColor = [UIColor whiteColor];
+//    //预览视图导航栏
+//    imagePicker.previewNaviBgColor = [self colorWithHexString:@"4e8cee"];
+//    //底部toolbar
+//    imagePicker.toolbarBgColor = [self colorWithHexString:@"4e8cee"];
+//    imagePicker.toolbarTitleColorNormal = [UIColor whiteColor];
+//    imagePicker.toolbarTitleColorDisabled = [UIColor whiteColor];
+//    //编辑视图导航栏
+//    imagePicker.editNaviBgColor = [self colorWithHexString:@"4e8cee"];
+//    imagePicker.editOKButtonTitleColorNormal = [UIColor whiteColor];
+//    imagePicker.editCancelButtonTitleColorNormal = [UIColor whiteColor];
+//    //编辑视图底部工具栏
+//    imagePicker.editToolbarBgColor = [self colorWithHexString:@"4e8cee"];
+//    imagePicker.editToolbarTitleColorNormal = [UIColor whiteColor];
+//    imagePicker.editToolbarTitleColorDisabled = [UIColor whiteColor];
+    
+    //底部按钮背景色
     imagePicker.oKButtonTitleColorNormal = [self colorWithHexString:[options objectForKey:@"oKButtonTitleColorNormal"]];
     imagePicker.oKButtonTitleColorDisabled = [self colorWithHexString:[options objectForKey:@"oKButtonTitleColorDisabled"]];
+    //导航栏背景色
     imagePicker.naviBgColor = [self colorWithHexString:[options objectForKey:@"naviBgColor"]];
     imagePicker.naviTitleColor = [self colorWithHexString:[options objectForKey:@"naviTitleColor"]];
     imagePicker.barItemTextColor = [self colorWithHexString:[options objectForKey:@"barItemTextColor"]];
-    
+    //预览视图导航栏
     imagePicker.previewNaviBgColor = [self colorWithHexString:[options objectForKey:@"previewNaviBgColor"]];
-    
+    //底部toolbar
     imagePicker.toolbarBgColor = [self colorWithHexString:[options objectForKey:@"toolbarBgColor"]];
     imagePicker.toolbarTitleColorNormal = [self colorWithHexString:[options objectForKey:@"toolbarTitleColorNormal"]];
     imagePicker.toolbarTitleColorDisabled = [self colorWithHexString:[options objectForKey:@"toolbarTitleColorDisabled"]];
-    
+    //编辑视图导航栏
     imagePicker.editNaviBgColor = [self colorWithHexString:[options objectForKey:@"editNaviBgColor"]];
     imagePicker.editOKButtonTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editOKButtonTitleColorNormal"]];
     imagePicker.editCancelButtonTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editCancelButtonTitleColorNormal"]];
+    //编辑视图底部工具栏
     imagePicker.editToolbarBgColor = [self colorWithHexString:[options objectForKey:@"editToolbarBgColor"]];
     imagePicker.editToolbarTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editToolbarTitleColorNormal"]];
     imagePicker.editToolbarTitleColorDisabled = [self colorWithHexString:[options objectForKey:@"editToolbarTitleColorDisabled"]];
-
+    
     /// 自定义文字
-    imagePicker.doneBtnTitleStr = @"确认";
-    //    imagePicker.editNaviBgColor = [UIColor greenColor];
+    imagePicker.doneBtnTitleStr = @"发送";
     [self.viewController showViewController:imagePicker sender:nil];
 }
 
@@ -272,7 +513,6 @@ typedef enum : NSUInteger {
 
 #pragma mark - UIImagePickerControllerDelegate
 
-
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
 {
     [picker.presentingViewController dismissViewControllerAnimated:YES completion:nil];
@@ -285,7 +525,7 @@ typedef enum : NSUInteger {
     NSLog(@"UIImagePickerController: User pressed cancel button");
 }
 
-#pragma mark - GMImagePickerControllerDelegate
+#pragma mark - LFImagePickerControllerDelegate
 - (void)lf_imagePickerController:(LFImagePickerController *)picker didFinishPickingResult:(NSArray <LFResultObject /* <LFResultImage/LFResultVideo> */*> *)results isOriginal:(BOOL)isOriginal;
 {
     NSMutableArray * result_all = [[NSMutableArray alloc] init];
@@ -299,13 +539,13 @@ typedef enum : NSUInteger {
     
     NSInteger j = 0;
     for (NSInteger i = 0; i < results.count; i++) {
-        LFResultObject *result = results[i];
-        if ([result isKindOfClass:[LFResultImage class]]) {
+        LFResultObject *resultObj = results[i];
+        if ([resultObj isKindOfClass:[LFResultImage class]]) {
             do {
-                filePath = [NSString stringWithFormat:@"%@/%@%03d.%@", docsPath, CDV_PHOTO_PREFIX, j++, @"jpg"];
+                filePath = [NSString stringWithFormat:@"%@/%@%03ld.%@", docsPath, CDV_PHOTO_PREFIX, (long)j++, @"jpg"];
             } while ([fileMgr fileExistsAtPath:filePath]);
             
-            LFResultImage *resultImage = (LFResultImage *)result;
+            LFResultImage *resultImage = (LFResultImage *)resultObj;
             
             NSData* data = nil;
             if (isOriginal || self.width < 0.0001 || self.height < 0.0001) {
@@ -318,7 +558,7 @@ typedef enum : NSUInteger {
                     // resample first
                     data = [self imageWithCompressImage:image];
                     if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsDictionary:@{@"status":[NSNumber numberWithInt:1],@"data":@{},@"msg":[err localizedDescription]}];
                         break;
                     } else {
                         [result_all addObject:[[NSURL fileURLWithPath:filePath] absoluteString]];
@@ -331,7 +571,7 @@ typedef enum : NSUInteger {
                 data = [self imageWithCompressImage:scaledImage];
                 
                 if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
-                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsDictionary:@{@"status":[NSNumber numberWithInt:1],@"data":@{},@"msg":[err localizedDescription]}];
                     break;
                 } else {
                     if(self.outputType == BASE64_STRING){
@@ -345,10 +585,23 @@ typedef enum : NSUInteger {
     }
     
     if (result == nil) {
-        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result_all];
+        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{@"status":[NSNumber numberWithInt:1],@"data":result_all,@"msg":@""}];
     }
     
-    [self.viewController dismissViewControllerAnimated:YES completion:nil];
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+}
+
+/**
+ 如果从云端获取路径，执行此回调
+ 
+ @param picker 选择器
+ @param results 回调对象
+ */
+- (void)lf_imagePickerController:(LFImagePickerController *)picker didFinishPickingCloudResult:(NSArray*)results {
+    NSLog(@"resultArray....%@", results);
+    CDVPluginResult* result  = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{@"medias":results}];
+    [picker dismissViewControllerAnimated:YES completion:nil];
     [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
 }
 

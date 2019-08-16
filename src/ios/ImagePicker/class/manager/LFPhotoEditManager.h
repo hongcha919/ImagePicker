@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+//#ifdef LF_MEDIAEDIT
 
 @class LFPhotoEdit, LFAsset, LFResultImage;
 @interface LFPhotoEditManager : NSObject
@@ -48,4 +49,4 @@
                completion:(void (^)(LFResultImage *resultImage))completion;
 @end
 
-
+//#endif

@@ -13,6 +13,9 @@
 @property (nonatomic, assign) CGFloat lineWidth;
 @property (nonatomic, strong) UIColor *lineColor;
 
+/** 正在绘画 */
+@property (nonatomic, readonly) BOOL isDrawing;
+
 @property (nonatomic, copy) void(^drawBegan)(void);
 @property (nonatomic, copy) void(^drawEnded)(void);
 

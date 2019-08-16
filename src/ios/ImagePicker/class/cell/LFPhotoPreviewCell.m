@@ -11,8 +11,10 @@
 #import "UIImage+LFCommon.h"
 #import "LFAssetManager.h"
 
+//#ifdef LF_MEDIAEDIT
 #import "LFPhotoEditManager.h"
 #import "LFPhotoEdit.h"
+//#endif
 
 @interface LFProgressView : UIView
 
@@ -85,7 +87,7 @@
         _scrollView = [[UIScrollView alloc] init];
         _scrollView.frame = CGRectMake(0, 0, self.width, self.height);
         _scrollView.bouncesZoom = YES;
-        _scrollView.maximumZoomScale = 4.5;
+        _scrollView.maximumZoomScale = 2.5;
         _scrollView.minimumZoomScale = 1.0;
         _scrollView.multipleTouchEnabled = YES;
         _scrollView.delegate = self;
@@ -153,33 +155,48 @@
 - (void)setModel:(LFAsset *)model
 {
     _model = model;
-    /** 优先显示编辑图片 */
-    LFPhotoEdit *photoEdit = [[LFPhotoEditManager manager] photoEditForAsset:model];
-    if (photoEdit.editPreviewImage) {
-        self.previewImage = photoEdit.editPreviewImage;
-    } else
-        if (model.previewImage) { /** 显示自定义图片 */
-        self.previewImage = model.previewImage;
+    if (model.type == LFAssetMediaTypePhoto) {
+//#ifdef LF_MEDIAEDIT
+        /** 优先显示编辑图片 */
+        LFPhotoEdit *photoEdit = [[LFPhotoEditManager manager] photoEditForAsset:model];
+        if (photoEdit.editPreviewImage) {
+            self.previewImage = photoEdit.editPreviewImage;
+        } else
+//#endif
+            if (model.previewImage) { /** 显示自定义图片 */
+                self.previewImage = model.previewImage;
+            } else {
+                
+                void (^completion)(id data,NSDictionary *info,BOOL isDegraded) = ^(id data,NSDictionary *info,BOOL isDegraded){
+                    if ([model isEqual:self.model]) {
+                        if ([data isKindOfClass:[UIImage class]]) { /** image */
+                            self.previewImage = (UIImage *)data;
+                        }
+                        //                _progressView.hidden = YES;
+                    }
+                };
+                
+                //        void (^progressHandler)(double progress, NSError *error, BOOL *stop, NSDictionary *info) = ^(double progress, NSError *error, BOOL *stop, NSDictionary *info){
+                //            if ([model isEqual:self.model]) {
+                //                _progressView.hidden = NO;
+                //                [self bringSubviewToFront:_progressView];
+                //                progress = progress > 0.02 ? progress : 0.02;;
+                //                _progressView.progress = progress;
+                //            }
+                //        };
+                
+                
+                [self subViewSetModel:model completeHandler:completion progressHandler:nil];
+            }
     } else {
-        
         void (^completion)(id data,NSDictionary *info,BOOL isDegraded) = ^(id data,NSDictionary *info,BOOL isDegraded){
             if ([model isEqual:self.model]) {
                 if ([data isKindOfClass:[UIImage class]]) { /** image */
                     self.previewImage = (UIImage *)data;
                 }
-//                _progressView.hidden = YES;
+                //                _progressView.hidden = YES;
             }
         };
-        
-//        void (^progressHandler)(double progress, NSError *error, BOOL *stop, NSDictionary *info) = ^(double progress, NSError *error, BOOL *stop, NSDictionary *info){
-//            if ([model isEqual:self.model]) {
-//                _progressView.hidden = NO;
-//                [self bringSubviewToFront:_progressView];
-//                progress = progress > 0.02 ? progress : 0.02;;
-//                _progressView.progress = progress;
-//            }
-//        };
-        
         
         [self subViewSetModel:model completeHandler:completion progressHandler:nil];
     }
@@ -202,11 +219,33 @@
     CGSize imageSize = [self subViewImageSize];
     
     if (!CGSizeEqualToSize(imageSize, CGSizeZero)) {
+
+
+        UIEdgeInsets ios11Safeinsets = UIEdgeInsetsZero;
+        if (@available(iOS 11.0, *)) {
+            ios11Safeinsets = self.safeAreaInsets;
+        }
+        CGSize scrollViewSize = self.scrollView.size;
+        scrollViewSize.height -= (ios11Safeinsets.top+ios11Safeinsets.bottom);
+        /** 定义最小尺寸,判断为长图，则使用放大处理 */
+        CGFloat minimumSize = scrollViewSize.width;
+        CGSize newSize = [UIImage lf_scaleImageSizeBySize:imageSize targetSize:scrollViewSize isBoth:NO];
         
-        CGSize newSize = [UIImage lf_scaleImageSizeBySize:imageSize targetSize:self.scrollView.size isBoth:NO];
+        BOOL isLongImage = (minimumSize > MIN(newSize.width, newSize.height));
+        if (isLongImage) { /** 长图 */
+            newSize = [UIImage lf_imageSizeBySize:imageSize maxWidth:self.scrollView.frame.size.width];
+        }
         
         _imageContainerView.size = newSize;
-        _imageContainerView.center = self.scrollView.center;
+        if (isLongImage && newSize.height > self.scrollView.frame.size.height-(ios11Safeinsets.top+ios11Safeinsets.bottom)) {
+            _imageContainerView.origin = CGPointMake(0, 0);
+            self.scrollView.showsVerticalScrollIndicator = YES;
+            [self.scrollView setContentOffset:CGPointMake(0, -ios11Safeinsets.top)];
+        } else {
+            _imageContainerView.center = self.scrollView.center;
+            self.scrollView.showsVerticalScrollIndicator = NO;
+        }
+        self.scrollView.contentSize = _imageContainerView.size;
         
         _imageView.frame = _imageContainerView.bounds;
         UIView *view = [self subViewInitDisplayView];
@@ -248,9 +287,15 @@
 #pragma mark - Private
 
 - (void)refreshImageContainerViewCenter {
-    CGFloat offsetX = (_scrollView.width > _scrollView.contentSize.width) ? ((_scrollView.width - _scrollView.contentSize.width) * 0.5) : 0.0;
-    CGFloat offsetY = (_scrollView.height > _scrollView.contentSize.height) ? ((_scrollView.height - _scrollView.contentSize.height) * 0.5) : 0.0;
-    self.imageContainerView.center = CGPointMake(_scrollView.contentSize.width * 0.5 + offsetX, _scrollView.contentSize.height * 0.5 + offsetY);
+    UIEdgeInsets ios11Safeinsets = UIEdgeInsetsZero;
+    if (@available(iOS 11.0, *)) {
+        ios11Safeinsets = self.safeAreaInsets;
+    }
+    if (self.imageContainerView.frame.size.height < self.scrollView.frame.size.height-(ios11Safeinsets.top+ios11Safeinsets.bottom)) {
+        CGFloat offsetX = (_scrollView.width > _scrollView.contentSize.width) ? ((_scrollView.width - _scrollView.contentSize.width) * 0.5) : 0.0;
+        CGFloat offsetY = (_scrollView.height > _scrollView.contentSize.height) ? ((_scrollView.height - _scrollView.contentSize.height) * 0.5) : 0.0;
+        self.imageContainerView.center = CGPointMake(_scrollView.contentSize.width * 0.5 + offsetX, _scrollView.contentSize.height * 0.5 + offsetY);
+    }
 }
 
 /** 创建显示视图 */
@@ -277,7 +322,7 @@
     /** 如果已被设置图片，忽略这次图片获取 */
     if (self.previewImage == nil) {
         /** 普通图片处理 */
-        [[LFAssetManager manager] getPhotoWithAsset:model.asset photoWidth:0 completion:completeHandler progressHandler:progressHandler networkAccessAllowed:YES];
+        [[LFAssetManager manager] getPhotoWithAsset:model.asset photoWidth:[UIScreen mainScreen].bounds.size.width completion:completeHandler progressHandler:progressHandler networkAccessAllowed:YES];
     }
 }
 

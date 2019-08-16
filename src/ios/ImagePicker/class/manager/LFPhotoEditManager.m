@@ -6,6 +6,7 @@
 //  Copyright © 2017年 LamTsanFeng. All rights reserved.
 //
 
+//#ifdef LF_MEDIAEDIT
 #import "LFPhotoEditManager.h"
 #import "LFImagePickerHeader.h"
 #import <Photos/Photos.h>
@@ -13,6 +14,7 @@
 #import "LFAsset.h"
 #import "UIImage+LF_ImageCompress.h"
 #import "UIImage+LFCommon.h"
+#import "UIImage+LF_Format.h"
 #import "LFResultObject_property.h"
 #import "LFAssetManager.h"
 #import "LFPhotoEdit.h"
@@ -42,7 +44,7 @@ static LFPhotoEditManager *manager;
 
 - (void)setPhotoEdit:(LFPhotoEdit *)obj forAsset:(LFAsset *)asset
 {
-    __weak LFPhotoEditManager *weakSelf = self;
+    __weak __typeof__(self) weakSelf = self;
     if (asset.asset) {
         if (asset.name.length) {
             if (obj) {
@@ -61,19 +63,12 @@ static LFPhotoEditManager *manager;
                 }
             }];
         }
-    } else if (asset.previewImage) {
-        NSString *name = [NSString stringWithFormat:@"%zd", [asset.previewImage hash]];
-        if (obj) {
-            [weakSelf.photoEditDict setObject:obj forKey:name];
-        } else {
-            [weakSelf.photoEditDict removeObjectForKey:name];
-        }
     }
 }
 
 - (LFPhotoEdit *)photoEditForAsset:(LFAsset *)asset
 {
-    __weak LFPhotoEditManager *weakSelf = self;
+    __weak __typeof__(self) weakSelf = self;
     __block LFPhotoEdit *photoEdit = nil;
     if (asset.asset) {
         if (asset.name.length) {
@@ -85,9 +80,6 @@ static LFPhotoEditManager *manager;
                 }
             }];
         }
-    } else if (asset.previewImage) {
-        NSString *name = [NSString stringWithFormat:@"%zd", [asset.previewImage hash]];
-        photoEdit = [weakSelf.photoEditDict objectForKey:name];
     }
     return photoEdit;
 }
@@ -122,39 +114,77 @@ static LFPhotoEditManager *manager;
                completion:(void (^)(LFResultImage *resultImage))completion
 {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        UIImage *thumbnail = nil;
-        UIImage *source = nil;
+        
+        CGFloat thumbnailCompress = (thumbnailCompressSize <=0 ? kThumbnailCompressSize : thumbnailCompressSize);
+        CGFloat sourceCompress = (compressSize <=0 ? kCompressSize : compressSize);
         
         LFPhotoEdit *photoEdit = [self photoEditForAsset:asset];
         NSString *imageName = asset.name;
         
-        /** 标清图/原图 */
-        source = photoEdit.editPreviewImage;
         /** 图片数据 */
-        NSData *imageData = nil;
-        if (!isOriginal) { /** 标清图 */
-            imageData = [source lf_fastestCompressImageDataWithSize:(compressSize <=0 ? kCompressSize : compressSize)];
-            source = [UIImage imageWithData:imageData scale:[UIScreen mainScreen].scale];
+        NSData *sourceData = nil; NSData *thumbnailData = nil;
+        UIImage *thumbnail = nil; UIImage *source = nil;
+        
+        /** 原图 */
+        source = photoEdit.editPreviewImage;
+        sourceData = photoEdit.editPreviewData;
+        
+        BOOL isGif = source.images.count;
+        
+        if (isGif) { /** GIF图片处理方式 */
+            if (!isOriginal) {
+                CGFloat imageRatio = 0.7f;
+                /** 标清图 */
+                sourceData = [source lf_fastestCompressAnimatedImageDataWithScaleRatio:imageRatio];
+                source = [UIImage LF_imageWithImageData:sourceData];
+            }
         } else {
-            imageData = UIImageJPEGRepresentation(source, 0.75);
+            if (!isOriginal) { /** 标清图 */
+                NSData *newSourceData = [source lf_fastestCompressImageDataWithSize:sourceCompress imageSize:sourceData.length];
+                if (newSourceData) {
+                    /** 可压缩的 */
+                    sourceData = newSourceData;
+                    source = [UIImage LF_imageWithImageData:sourceData];
+                }
+            }
         }
         /** 图片宽高 */
         CGSize imageSize = source.size;
         
-        /** 缩略图 */
-        CGFloat aspectRatio = imageSize.width / (CGFloat)imageSize.height;
-        CGFloat th_pixelWidth = 80 * 2.0; // scale
-        CGFloat th_pixelHeight = th_pixelWidth / aspectRatio;
-        thumbnail = [source lf_scaleToSize:CGSizeMake(th_pixelWidth, th_pixelHeight)];
-        NSData *thumbnailData = [thumbnail lf_fastestCompressImageDataWithSize:(thumbnailCompressSize <=0 ? kThumbnailCompressSize : thumbnailCompressSize)];
-        thumbnail = [UIImage imageWithData:thumbnailData scale:[UIScreen mainScreen].scale];
+        if (thumbnailCompressSize > 0) {        
+            if (isGif) {
+                CGFloat minWidth = MIN(imageSize.width, imageSize.height);
+                /** 缩略图 */
+                CGFloat imageRatio = 0.5f;
+                if (minWidth > 100.f) {
+                    imageRatio = 50.f/minWidth;
+                }
+                /** 缩略图 */
+                thumbnailData = [source lf_fastestCompressAnimatedImageDataWithScaleRatio:imageRatio];
+                thumbnail = [UIImage LF_imageWithImageData:thumbnailData];
+            } else {
+                /** 缩略图 */
+//                CGFloat aspectRatio = imageSize.width / (CGFloat)imageSize.height;
+//                CGFloat th_pixelWidth = MIN(80, imageSize.width*0.5) * 2.0; // scale
+//                CGFloat th_pixelHeight = th_pixelWidth / aspectRatio;
+//                thumbnail = [source lf_scaleToSize:CGSizeMake(th_pixelWidth, th_pixelHeight)];
+                NSData *newThumbnailData = [source lf_fastestCompressImageDataWithSize:thumbnailCompress imageSize:sourceData.length];
+                if (newThumbnailData) {
+                    /** 可压缩的 */
+                    thumbnailData = newThumbnailData;
+                } else {
+                    thumbnailData = [NSData dataWithData:sourceData];
+                }
+                thumbnail = [UIImage LF_imageWithImageData:thumbnailData];
+            }
+        }
         
         LFResultImage *result = [LFResultImage new];
         result.asset = asset.asset;
         result.thumbnailImage = thumbnail;
         result.thumbnailData = thumbnailData;
         result.originalImage = source;
-        result.originalData = imageData;
+        result.originalData = sourceData;
         
         LFResultInfo *info = [LFResultInfo new];
         result.info = info;
@@ -162,7 +192,7 @@ static LFPhotoEditManager *manager;
         /** 图片文件名 */
         info.name = imageName;
         /** 图片大小 */
-        info.byte = imageData.length;
+        info.byte = sourceData.length;
         /** 图片宽高 */
         info.size = imageSize;
         
@@ -172,4 +202,4 @@ static LFPhotoEditManager *manager;
     });
 }
 @end
-
+//#endif
