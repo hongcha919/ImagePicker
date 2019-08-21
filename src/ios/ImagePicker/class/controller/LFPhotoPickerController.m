@@ -979,7 +979,12 @@
     cell.displayGif = imagePickerVc.allowPickingType&LFPickingMediaTypeGif;
     cell.displayLivePhoto = imagePickerVc.allowPickingType&LFPickingMediaTypeLivePhoto;
     cell.displayPhotoName = imagePickerVc.displayImageFilename;
-    cell.onlySelected = !imagePickerVc.allowPreview;
+    if (/*imagePickerVc.cutType<=1 && */imagePickerVc.maxImagesCount==1 && imagePickerVc.allowPickingType == LFPickingMediaTypePhoto) {
+        cell.onlySelected = NO;
+    }else{
+        cell.onlySelected = !imagePickerVc.allowPreview;
+    }
+    
     /** 优先级低属性，当最大数量为1时只能点击 */
 //    if (imagePickerVc.maxImagesCount != imagePickerVc.maxVideosCount && model.type == LFAssetMediaTypeVideo) {
 //        cell.onlyClick = imagePickerVc.maxVideosCount == 1;
@@ -1044,7 +1049,7 @@
         }
         
         LFAsset *model = [self.models objectAtIndex:index];
-        if (model.type == LFAssetMediaTypePhoto) {
+        if (model.type == LFAssetMediaTypePhoto && imagePickerVc.allowEditing) {
             CustomPhotoEditingController *photoEditingVC = [[CustomPhotoEditingController alloc] init];
             photoEditingVC.cutType = imagePickerVc.cutType;
             photoEditingVC.aspectWHRatio = imagePickerVc.aspectWHRatio;
@@ -1100,6 +1105,10 @@
                     }
                 }];
             }
+        }else{
+            [imagePickerVc.selectedModels removeAllObjects];
+            [imagePickerVc.selectedModels addObject:model];
+            [self doneButtonClick];
         }
         
 //        // preview phote or video / 预览照片或视频
