@@ -1,4 +1,3 @@
-cordova.define("com.haoqi.imagepicker.ImagePicker", function(require, exports, module) {
 /*global cordova,window,console*/
 /**
  * An Image Picker plugin for Cordova
@@ -377,5 +376,3 @@ ImagePicker.prototype.shootPhoto_Video = function(success, fail, options) {
 };
 
 window.imagePicker = new ImagePicker();
-
-});
