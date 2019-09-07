@@ -225,8 +225,10 @@
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     LFImagePickerController *imagePickerVc = (LFImagePickerController *)self.navigationController;
-    if (imagePickerVc.maxImagesCount==1 /*&& imagePickerVc.cutType<=1*/) {
-        [imagePickerVc.selectedModels removeAllObjects];
+    if (imagePickerVc.allowPickingType == LFPickingMediaTypePhoto) {
+        if (imagePickerVc.maxImagesCount==1 /*&& imagePickerVc.cutType<=1*/) {
+            [imagePickerVc.selectedModels removeAllObjects];
+        }
     }
 }
 
@@ -543,6 +545,23 @@
     if (imagePickerVc.selectedModels.count == 0) {
         [[[UIAlertView alloc] initWithTitle:@"温馨提示" message:@"未选择图片或视频，请先选择！" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil] show];
         return;
+    }
+    
+    if (imagePickerVc.allowPickingType == LFPickingMediaTypeVideo) {
+        for (LFAsset *cellModel in imagePickerVc.selectedModels) {
+            LFVideoEdit *videoEdit = [[LFVideoEditManager manager] videoEditForAsset:cellModel];
+            NSTimeInterval duration = videoEdit.editPreviewImage ? videoEdit.duration : cellModel.duration;
+            
+            if (lf_videoDuration(duration) > imagePickerVc.maxVideoDuration) {
+                LFImagePickerController *imagePickerVc = (LFImagePickerController *)self.navigationController;
+                NSArray *models = [imagePickerVc.selectedModels copy];
+                LFPhotoPreviewController *photoPreviewVc = [[LFPhotoPreviewController alloc] initWithModels:models index:0];
+                photoPreviewVc.alwaysShowPreviewBar = YES;
+                photoPreviewVc.isShowVideoMaxTimeAlert = YES;
+                [self pushPhotoPrevireViewController:photoPreviewVc];
+                return;
+            }
+        }
     }
     
     // 判断是否满足最小必选张数的限制
@@ -904,14 +923,14 @@
 //#else
 //                    NSTimeInterval duration = cellModel.duration;
 //#endif
-                    if (lf_videoDuration(duration) > weakImagePickerVc.maxVideoDuration) {
-                        if (weakImagePickerVc.maxVideoDuration < 60) {
-                            [weakImagePickerVc showAlertWithTitle:[NSString stringWithFormat:[NSBundle lf_localizedStringForKey:@"_maxSelectVideoTipText_second"], (int)weakImagePickerVc.maxVideoDuration]];
-                        } else {
-                            [weakImagePickerVc showAlertWithTitle:[NSString stringWithFormat:[NSBundle lf_localizedStringForKey:@"_maxSelectVideoTipText_minute"], (int)weakImagePickerVc.maxVideoDuration/60]];
-                        }
-                        return;
-                    }
+//                    if (lf_videoDuration(duration) > weakImagePickerVc.maxVideoDuration) {
+//                        if (weakImagePickerVc.maxVideoDuration < 60) {
+//                            [weakImagePickerVc showAlertWithTitle:[NSString stringWithFormat:[NSBundle lf_localizedStringForKey:@"_maxSelectVideoTipText_second"], (int)weakImagePickerVc.maxVideoDuration]];
+//                        } else {
+//                            [weakImagePickerVc showAlertWithTitle:[NSString stringWithFormat:[NSBundle lf_localizedStringForKey:@"_maxSelectVideoTipText_minute"], (int)weakImagePickerVc.maxVideoDuration/60]];
+//                        }
+//                        return;
+//                    }
                 }
                 [weakImagePickerVc.selectedModels addObject:cellModel];
                 [weakSelf refreshBottomToolBarStatus];

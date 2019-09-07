@@ -227,15 +227,31 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     self.recordVideoLeftTimeView.transform = CGAffineTransformMakeRotation(degreeToRadinas(-90));
     
     self.currentShootingOrientation = UIDeviceOrientationPortrait;
+    
+    
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-    if (self.photoPreviewImageView || self.videoURL) {
+    
+    if (self.shootType == 1) { //拍照
+        self.videoRecBtn.hidden = YES;
+        self.cameraBtn.hidden = YES;
         
+        [self cameraBtn:nil];
+        
+    }else if (self.shootType == 2) { //录像
+        self.videoRecBtn.hidden = YES;
+        self.cameraBtn.hidden = YES;
+        
+        [self videoRecBtn:nil];
+    }
+    
+    if (self.photoPreviewImageView || self.videoURL) {
         return;
     }
+
     AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
     if (authStatus == AVAuthorizationStatusRestricted || authStatus == AVAuthorizationStatusDenied)
     {
@@ -262,7 +278,9 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 {
     [super viewDidAppear:animated];
     if (self.photoPreviewImageView || self.videoURL) {
-        return;
+        if (self.cutType != 0 && self.cutType != 1) {
+            return;
+        }
     }
     [self startSession];
     
@@ -690,7 +708,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     
     LFBaseEditingController *editingVC = nil;
     
-    if (self.photoPreviewImageView) {
+    if (self.photoPreviewImageView || currentRecType==0) {
         CustomPhotoEditingController *photoEditingVC = [[CustomPhotoEditingController alloc] init];
         photoEditingVC.cutType = self.cutType;//imagePickerVc.cutType;
         photoEditingVC.aspectWHRatio = self.aspectWHRatio;//imagePickerVc.aspectWHRatio;
@@ -722,6 +740,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         photoEditingVC.editImage = finalImage;
         photoEditingVC.delegate = self;
         editingVC = photoEditingVC;
+        
 //        if (imagePickerVc.photoEditLabrary) {
 //            imagePickerVc.photoEditLabrary(photoEditingVC);
 //        }
@@ -763,7 +782,6 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 }
 - (void)lf_PhotoEditingController:(CustomPhotoEditingController *)photoEditingVC didFinishPhotoEdit:(LFPhotoEdit *)photoEdit {
     NSLog(@"lf_PhotoEditingController---didFinishPhotoEdit");
-//    [self previewPhotoWithImage:photoEdit.editPreviewImage];
     UIImage *finalImage = photoEdit.editPreviewImage;
 
     float videoRatio = finalImage.size.height /finalImage.size.width; //得到的图片 高/宽
@@ -772,9 +790,17 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     self.photoPreviewImageView.image = finalImage;
     self.photoPreviewImageView.center = self.view.center;
     
-    [photoEditingVC dismissViewControllerAnimated:YES completion:^{
+    if (self.cutType == 0 || self.cutType == 1) {
+        [photoEditingVC dismissViewControllerAnimated:YES completion:^{
+            [self confirmBtnFunc:nil];
+        }];
         
-    }];
+    }else{
+        [photoEditingVC dismissViewControllerAnimated:YES completion:^{
+            
+        }];
+    }
+    
 }
 
 #pragma mark - LFVideoEditingControllerDelegate
@@ -1077,9 +1103,12 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     [self.view bringSubviewToFront:self.recordVideoRightTimeView];
     [self.rotateCameraButton setHidden:NO];
     [self.closeButton setHidden:NO];
-    [self.cameraBtn setHidden:NO];
-    [self.videoRecBtn setHidden:NO];
     [self.takeButton setHidden:NO];
+    
+    if (self.shootType == 0) {
+        [self.cameraBtn setHidden:NO];
+        [self.videoRecBtn setHidden:NO];
+    }
     
 //    [self.view bringSubviewToFront:self.tipLabel];
 //    [self.tipLabel setAlpha:0];
@@ -1195,20 +1224,24 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 - (void)takePhotos:(UITapGestureRecognizer *)tapGestureRecognizer
 {
     //根据设备输出获得连接
-    AVCaptureConnection *captureConnection = [self.captureStillImageOutput connectionWithMediaType:AVMediaTypeVideo];
+    __block AVCaptureConnection *captureConnection = [self.captureStillImageOutput connectionWithMediaType:AVMediaTypeVideo];
     
 //    [captureConnection setVideoScaleAndCropFactor:self.effectiveScale];
+    if (captureConnection.enabled) {
+        //根据连接取得设备输出的数据
+        [self.captureStillImageOutput captureStillImageAsynchronouslyFromConnection:captureConnection completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
+            if (imageDataSampleBuffer)
+            {
+                NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+                UIImage *image = [UIImage imageWithData:imageData];
+                
+                [self previewPhotoWithImage:image];
+                
+                captureConnection = nil;
+            }
+        }];
+    }
     
-    //根据连接取得设备输出的数据
-    [self.captureStillImageOutput captureStillImageAsynchronouslyFromConnection:captureConnection completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
-        if (imageDataSampleBuffer)
-        {
-            NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
-            UIImage *image = [UIImage imageWithData:imageData];
-            
-            [self previewPhotoWithImage:image];
-        }
-    }];
 }
 
 /**
@@ -1217,6 +1250,57 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 - (void)previewPhotoWithImage:(UIImage *)image
 {
     [self stopUpdateAccelerometer];
+    /*
+     拍照场景cuttype为0和1时，拍照后直接进入编辑页，编辑页面点完成就上传，点返回就回到拍照页面。（省去了预览功能）
+     */
+    if (self.cutType == 0 || self.cutType == 1) {
+        
+        UIImage *finalImage = nil;
+        if (self.shootingOrientation == UIDeviceOrientationLandscapeRight)
+        {
+            finalImage = [self rotateImage:image withOrientation:UIImageOrientationDown];
+        }
+        else if (self.shootingOrientation == UIDeviceOrientationLandscapeLeft)
+        {
+            finalImage = [self rotateImage:image withOrientation:UIImageOrientationUp];
+        }
+        else if (self.shootingOrientation == UIDeviceOrientationPortraitUpsideDown)
+        {
+            finalImage = [self rotateImage:image withOrientation:UIImageOrientationLeft];
+        }
+        else
+        {
+            finalImage = [self rotateImage:image withOrientation:UIImageOrientationRight];
+        }
+        
+        if (!self.photoPreviewImageView) {
+            self.photoPreviewImageView = [[UIImageView alloc] init];
+        }
+        
+        float videoRatio = finalImage.size.width / finalImage.size.height; //得到的图片 高/宽
+        if (self.shootingOrientation == UIDeviceOrientationLandscapeRight || self.shootingOrientation == UIDeviceOrientationLandscapeLeft)
+        {
+            CGFloat height = kScreenWidth * videoRatio;
+            CGFloat y = (kScreenHeight - height) / 2;
+            [self.photoPreviewImageView setFrame:CGRectMake(0, y, kScreenWidth, height)];
+        }
+        else
+        {
+            [self.photoPreviewImageView setFrame:CGRectMake(0, 0, kScreenWidth, kScreenWidth*videoRatio)];
+        }
+        self.photoPreviewImageView.image = finalImage;
+        
+        /*
+         拍照场景cuttype为0和1时，拍照后直接进入编辑页，编辑页面点完成就上传，点返回就回到拍照页面。（省去了预览功能）
+         */
+        if (self.cutType == 0 || self.cutType == 1) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self editBtnFunc:nil];
+            });
+        }
+        
+        return;
+    }
     
 //    [self.cameraButton setHidden:YES];
     [self.cameraBtn setHidden:YES];
@@ -1245,9 +1329,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     {
         finalImage = [self rotateImage:image withOrientation:UIImageOrientationRight];
     }
-//    NSLog(@"image %@",NSStringFromCGSize(image.size));
-//    NSLog(@"finalImage %@",NSStringFromCGSize(finalImage.size));
-    
+
     if (!self.photoPreviewImageView) {
         self.photoPreviewImageView = [[UIImageView alloc] init];
     }

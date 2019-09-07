@@ -1184,19 +1184,28 @@ CGFloat const naviTipsViewDefaultHeight = 30.f;
 //#endif
         if (lf_videoDuration(duration) > imagePickerVc.maxVideoDuration) {
             _videoMaxTimeLabel.text = [NSString stringWithFormat:@"您的视频较长，请裁剪至%.f秒以内", imagePickerVc.maxVideoDuration];
-            _doneButton.enabled = NO;
+            _doneButton.userInteractionEnabled = NO;
             _doneButton.alpha = 0.5;
-            _selectButton.enabled = NO;
+            _selectButton.userInteractionEnabled = NO;
             _selectButton.alpha = 0.5;
+            
+            if (self.isShowVideoMaxTimeAlert) {
+                if (imagePickerVc.maxVideoDuration < 60) {
+                    [imagePickerVc showAlertWithTitle:[NSString stringWithFormat:@"您选中的视频时长不能超过%d秒，请裁剪！", (int)imagePickerVc.maxVideoDuration]];
+                } else {
+                    [imagePickerVc showAlertWithTitle:[NSString stringWithFormat:@"您选中的视频时长不能超过%d分钟，请裁剪！", (int)imagePickerVc.maxVideoDuration/60]];
+                }
+                self.isShowVideoMaxTimeAlert = NO;
+            }
 //            if (imagePickerVc.maxVideoDuration < 60) {
 //                _naviTipsLabel.text = [NSString stringWithFormat:[NSBundle lf_localizedStringForKey:@"_maxSelectVideoTipText_second"], (int)imagePickerVc.maxVideoDuration];
 //            } else {
 //                _naviTipsLabel.text = [NSString stringWithFormat:[NSBundle lf_localizedStringForKey:@"_maxSelectVideoTipText_minute"], (int)imagePickerVc.maxVideoDuration/60];
 //            }
         }else{
-            _doneButton.enabled = YES;
+            _doneButton.userInteractionEnabled = YES;
             _doneButton.alpha = 1;
-            _selectButton.enabled = YES;
+            _selectButton.userInteractionEnabled = YES;
             _selectButton.alpha = 1;
             _videoMaxTimeLabel.text = @"";
         }

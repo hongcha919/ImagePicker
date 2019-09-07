@@ -285,13 +285,13 @@ NSTimeInterval lfme_videoDuration(NSTimeInterval duration)
         double startTime = MIN(lfme_videoDuration(self.gridView.gridRect.origin.x/self.width*self.totalDuration), self.totalDuration);
         double endTime = MIN(lfme_videoDuration((self.gridView.gridRect.origin.x+self.gridView.gridRect.size.width)/self.width*self.totalDuration), self.totalDuration);
         
-        _startTime = startTime;
-        _endTime = endTime;
+        _startTime = (int)startTime;
+        _endTime = (int)endTime;
         
         
-        self.startTimeLabel.text = [LFVideoTrimmerView getMMSSWithSecond:startTime];
-        self.endTimeLabel.text = [LFVideoTrimmerView getMMSSWithSecond:endTime];
-        self.totalTimeLabel.text = [LFVideoTrimmerView getMMSSWithSecond:endTime-startTime];
+        self.startTimeLabel.text = [LFVideoTrimmerView getMMSSWithSecond:(int)startTime];
+        self.endTimeLabel.text = [LFVideoTrimmerView getMMSSWithSecond:(int)endTime];
+        self.totalTimeLabel.text = [LFVideoTrimmerView getMMSSWithSecond:(int)endTime-(int)startTime];
         self.showTimeLabel.text = [NSString stringWithFormat:@"裁剪后时长:%d秒",(int)endTime-(int)startTime];
     }
 }

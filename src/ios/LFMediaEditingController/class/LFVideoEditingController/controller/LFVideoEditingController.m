@@ -319,7 +319,7 @@
 
 - (void)finishButtonClick
 {
-    if (self.maxClippingDuration < [_EditingView getEditVideoDuration]) {
+    if (self.maxClippingDuration < (int)[_EditingView getEditVideoDuration]) {
         [[[UIAlertView alloc] initWithTitle:@"温馨提示" message:@"裁剪的视频时长仍大于限制时长" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil] show];
         return;
     }

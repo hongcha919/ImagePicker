@@ -25,6 +25,9 @@
 /** 总是显示预览框 */
 @property (nonatomic, assign) BOOL alwaysShowPreviewBar;
 
+/** 是否需要显示超过所需视频最大长度提示 */
+@property (nonatomic, assign) BOOL isShowVideoMaxTimeAlert;
+
 /** 3DTouch */
 - (void)beginPreviewing:(UINavigationController *)navi;
 - (void)endPreviewing;

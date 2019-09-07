@@ -138,7 +138,13 @@ typedef enum : NSUInteger {
     [self launchImagePicker:LFPickingMediaTypeVideo maximumImagesCount:1 maximumVideosCount:maxVideoCount cutType:self.cutType cutWidth:0 cutHeigth:0 options:options];
 }
 
-- (void) shootPhoto_Video:(CDVInvokedUrlCommand *)command {
+/**
+ 拍照摄像
+
+ @param command <#command description#>
+ @param type <#type description#>
+ */
+- (void) shootPhoto_Video:(CDVInvokedUrlCommand *)command{
     self.callbackId = command.callbackId;
     NSDictionary *options = [command.arguments objectAtIndex: 0];
     if (!options || options.count == 0) {
@@ -162,6 +168,7 @@ typedef enum : NSUInteger {
     NSInteger cutHeigth = [[options objectForKey:@"cutHeigth"] integerValue];
     
     
+    
     XFCameraController *cameraController = [XFCameraController defaultCameraController];
     if (options[@"duration"] && [options[@"duration"] doubleValue] >0) {
         cameraController.maxRecTime = [options[@"duration"] doubleValue];
@@ -180,6 +187,17 @@ typedef enum : NSUInteger {
     } else {
         cameraController.aspectWHRatio = cutWidth*1.0/cutHeigth*1.0;
     }
+    
+    //配置拍摄类型
+    int type = [options[@"type"] intValue];
+    if (type == 5) {
+        cameraController.shootType = 1;
+    }else if (type == 6) {
+        cameraController.shootType = 2;
+    }else{
+        cameraController.shootType = 0;
+    }
+    
     cameraController.editNaviBgColor = [self colorWithHexString:[options objectForKey:@"editNaviBgColor"]];
     cameraController.editOKButtonTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editOKButtonTitleColorNormal"]];
     cameraController.editCancelButtonTitleColorNormal = [self colorWithHexString:[options objectForKey:@"editCancelButtonTitleColorNormal"]];
@@ -228,6 +246,10 @@ typedef enum : NSUInteger {
         [self shootPhoto_Video:command];
     }else if (type == 4) { //选择视频上传
         [self getVideos:command];
+    }else if (type == 5) { //只拍照
+        [self shootPhoto_Video:command];
+    }else if (type == 6) { //只拍摄视频
+        [self shootPhoto_Video:command];
     }else { //选择图片上传
         [self getPictures:command];
     }

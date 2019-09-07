@@ -89,6 +89,9 @@ typedef void(^ShootCloudCompletionBlock)(NSMutableArray *resultArray);
 /** 是否允许编辑 默认NO */
 @property (nonatomic, assign) BOOL allowEditing;
 
+/** 拍摄类型 0：支持拍照和摄像 1：只拍照 2：只摄像 */
+@property (nonatomic, assign) int shootType;
+
 //编辑视图导航栏
 @property (nonatomic, strong) UIColor *editNaviBgColor;
 @property (nonatomic, strong) UIColor *editOKButtonTitleColorNormal;
