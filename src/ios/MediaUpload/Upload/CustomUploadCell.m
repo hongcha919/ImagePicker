@@ -104,7 +104,7 @@
                 weakSelf.titleLab.text = @"图片文件上传完成";
                 
                 if (weakSelf.photo_AudioCompletionBlock) {
-                    weakSelf.photo_AudioCompletionBlock(result, self.tag, @"");
+                    weakSelf.photo_AudioCompletionBlock(result, 1, self.tag, @"");
                 }
                 
             }else{
@@ -112,7 +112,7 @@
                 weakSelf.titleLab.text = @"图片文件上传失败";
                 weakSelf.sendStatus = 3;
                 if (weakSelf.photo_AudioCompletionBlock) {
-                    weakSelf.photo_AudioCompletionBlock(nil, self.tag, error.localizedDescription);
+                    weakSelf.photo_AudioCompletionBlock(nil, 1, self.tag, error.localizedDescription);
                 }
             }
         });
@@ -183,14 +183,14 @@
                 
                 weakSelf.titleLab.text = @"音频文件上传完成";
                 if (weakSelf.photo_AudioCompletionBlock) {
-                    weakSelf.photo_AudioCompletionBlock(result, self.tag, @"");
+                    weakSelf.photo_AudioCompletionBlock(result, 2, self.tag, @"");
                 }
             }else{
                 NSLog(@"uploadError 信息[%@]", error.localizedDescription);
                 weakSelf.titleLab.text = @"音频文件上传失败";
                 weakSelf.sendStatus = 3;
                 if (weakSelf.photo_AudioCompletionBlock) {
-                    weakSelf.photo_AudioCompletionBlock(nil, self.tag, error.localizedDescription);
+                    weakSelf.photo_AudioCompletionBlock(nil, 2, self.tag, error.localizedDescription);
                 }
             }
         });
@@ -205,7 +205,7 @@
  @param videoSign 上传视频签名
  @param type 类型 0：图片 1：语音 2：视频
  */
--(void)setCellMsgWithResultVideo:(LFResultVideo *)result {
+-(void)setCellMsgWithResultVideo:(LFResultVideo *)result complete:(void (^)(BOOL isSuccess))complete {
     //给背景视图添加阴影
     [self addShadowToView:self.bgView withColor:[UIColor lightGrayColor]];
     self.progressView.progress = 0.0;
@@ -244,7 +244,13 @@
             
             [self->_videoPublish publishVideo:publishParam];
             
+            if (complete) {
+                complete(YES);
+            }
         } else{
+            if (complete) {
+                complete(NO);
+            }
             UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"视频上传签名获取失败"
                                                                 message:[NSString stringWithFormat:@"错误码：%d",result]
                                                                delegate:self
@@ -289,6 +295,7 @@
         NSLog(@"uploadError 信息[%@]", result.descMsg);
         self.titleLab.text = @"视频文件上传失败";
         self.sendStatus = 3;
+        NSString *error = result.descMsg;
         if (self.videoCompletionBlock) {
             self.videoCompletionBlock(nil, _mediaId, self.tag, result.descMsg);
         }

@@ -334,6 +334,7 @@
         
         uploadVC.uploadArray = [NSMutableArray arrayWithArray:@[result]];
         uploadVC.isAudio = YES;
+        uploadVC.errorAlertType = self.errorAlertType;
         
         [uploadVC setBackButtonClickBlock:^{
             NSLog(@"backButtonClickBlock");

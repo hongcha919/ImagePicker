@@ -205,19 +205,6 @@
 - (void)cancel:(UIButton *)button
 {
     __weak __typeof__(self) weakSelf = self;
-//    if (self.resultArray.count != self.uploadArray.count) {
-//        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"温馨提示" message:[NSString stringWithFormat:@"资源正在上传,请稍后"] delegate:self cancelButtonTitle:@"知道了" otherButtonTitles:nil, nil];
-//        [alertView show];
-//        return;
-//    }
-//    if (self.resultArray.count == self.uploadArray.count) {
-//        [self.navigationController dismissViewControllerAnimated:YES completion:^{
-//            if (weakSelf.doneButtonClickBlock) {
-//                weakSelf.doneButtonClickBlock(weakSelf.resultArray);
-//            }
-//        }];
-//        return;
-//    }
     [self.navigationController dismissViewControllerAnimated:YES completion:^{
         if (weakSelf.backButtonClickBlock) {
             weakSelf.backButtonClickBlock();
@@ -227,11 +214,6 @@
 
 - (void)okBtn:(UIButton *)button
 {
-//    if (self.resultArray.count != self.uploadArray.count) {
-//        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"温馨提示" message:[NSString stringWithFormat:@"资源未上传完成,无法提交"] delegate:self cancelButtonTitle:@"知道了" otherButtonTitles:nil, nil];
-//        [alertView show];
-//        return;
-//    }
     [self.navigationController dismissViewControllerAnimated:YES completion:^{
         if (self.doneButtonClickBlock) {
             self.doneButtonClickBlock(self.resultArray);
@@ -285,12 +267,12 @@
                 }
             }
             [self hideProgressHUD];
-            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"温馨提示" message:[NSString stringWithFormat:@"用户标识获取失败，无法上传"] delegate:self cancelButtonTitle:@"知道了" otherButtonTitles:nil, nil];
-            [alertView show];
             weakSelf.navigationItem.leftBarButtonItem.customView.userInteractionEnabled = YES;
             weakSelf.navigationItem.leftBarButtonItem.enabled = YES;
             weakSelf.navigationItem.leftBarButtonItem.customView.alpha = 1;
             
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"温馨提示" message:[NSString stringWithFormat:@"用户标识获取失败，无法上传"] delegate:self cancelButtonTitle:@"知道了" otherButtonTitles:nil, nil];
+            [alertView show];
         }];
     }else{
         if ([self isAudio_ImgFileUpload]) { //如果是图片、音频上传，则使用腾讯云cos服务
@@ -499,6 +481,107 @@
     return isAudo_Img;
 }
 
+/**
+ 处理上传失败提示逻辑
+ */
+-(void)dealUploadErrAlert {
+    BOOL isUploadFail = NO;//是否存在上传失败的
+    BOOL isAllUploadFail = YES;//是否所有都上传失败
+    int nSuccessNum = 0; //上传成功数目
+    int mediaType = 0; //上传文件类型
+    NSMutableArray *successMediasArr = [NSMutableArray array];
+    
+    for (NSDictionary *mediaDic in self.resultArray) {
+        if ([mediaDic[@"mediaType"] intValue] == 0) {//视频
+            mediaType = 0;
+            if ([mediaDic[@"videoUrl"] isEqualToString:@""]) {
+                isUploadFail = YES;
+            }else{
+                isAllUploadFail = NO;
+                nSuccessNum++;
+                [successMediasArr addObject:mediaDic];
+            }
+        }else if ([mediaDic[@"mediaType"] intValue] == 1) {//图片
+            mediaType = 1;
+            if ([mediaDic[@"originUrl"] isEqualToString:@""]) {
+                isUploadFail = YES;
+            }else{
+                isAllUploadFail = NO;
+                nSuccessNum++;
+                [successMediasArr addObject:mediaDic];
+            }
+        }else if ([mediaDic[@"mediaType"] intValue] == 2) {//音频
+            mediaType = 2;
+            if ([mediaDic[@"mediaUrl"] isEqualToString:@""]) {
+                isUploadFail = YES;
+            }else{
+                isAllUploadFail = NO;
+                nSuccessNum++;
+                [successMediasArr addObject:mediaDic];
+            }
+        }
+    }
+    
+    if (self.errorAlertType == 0) { //默认不给容错提示，只将错误信息根据接口返回，容错提示放到引用插件侧处理
+        
+    }else if (self.errorAlertType == 1) { //容错提示在插件侧提示，可重传、可取消、可发送部分成功数据
+        if (self.resultArray.count == 1) {
+            if (isUploadFail) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    //给出提示，可返回重传
+                    [self showAlertWithTitle:@"温馨提示" cancelTitle:@"返回重新上传" message:@"上传失败,请返回重新上传!" complete:^{
+                        [self cancel:nil];
+                    }];
+                });
+            }
+        }else{
+            if (isAllUploadFail) {//全部上传失败
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    //给出提示，可返回重传
+                    [self showAlertWithTitle:@"温馨提示" cancelTitle:@"返回重新上传" message:@"上传失败,请返回重新上传!" complete:^{
+                        [self cancel:nil];
+                    }];
+                });
+            }else{
+                if (!isUploadFail) {
+                    return;
+                }
+                //给出提示
+                NSString *fileTypeName = @"个视频";
+                if (mediaType == 1) {
+                    fileTypeName = @"张图片";
+                }else if (mediaType == 2) {
+                    fileTypeName = @"个音频";
+                }
+                NSString *alertStr = [NSString stringWithFormat:@"上传%d%@成功,%d%@失败",nSuccessNum,fileTypeName,(int)self.resultArray.count-nSuccessNum,fileTypeName];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self showAlertWithTitle:@"温馨提示" leftTitle:@"返回重新上传" rightTitle:[NSString stringWithFormat:@"上传%d%@",nSuccessNum,fileTypeName] message:alertStr leftTouchEvent:^{
+                        [self cancel:nil];
+                    } rightTouchEvent:^{
+                        [self.navigationController dismissViewControllerAnimated:YES completion:^{
+                            if (self.doneButtonClickBlock) {
+                                self.doneButtonClickBlock(successMediasArr);
+                            }
+                        }];
+                        self.navigationItem.rightBarButtonItem.customView.userInteractionEnabled = NO;
+                        self.navigationItem.rightBarButtonItem.enabled = NO;
+                    }];
+                });
+            }
+        }
+    }else if (self.errorAlertType == 2) { //容错提示在插件侧提示，可重传、可取消、不可发送部分成功数据
+        if (isUploadFail) {
+            //给出提示，可返回重传
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self showAlertWithTitle:@"温馨提示" cancelTitle:@"返回重新上传" message:@"上传失败,请返回重新上传!" complete:^{
+                    [self cancel:nil];
+                }];
+            });
+        }
+    }else{
+        
+    }
+}
 
 /*
 #pragma mark - Navigation
@@ -539,6 +622,11 @@
             [resultDic setObject:[NSNumber numberWithInt:0] forKey:@"mediaType"];
             [weakSelf.uploadStatusArray replaceObjectAtIndex:index withObject:[NSNumber numberWithInt:2]];
         }else{
+            [resultDic setObject:@"" forKey:@"mediaId"];
+            [resultDic setObject:@"" forKey:@"fileId"];
+            [resultDic setObject:@"" forKey:@"videoUrl"];
+            [resultDic setObject:@"" forKey:@"videoFileName"];
+            [resultDic setObject:[NSNumber numberWithInt:0] forKey:@"mediaType"];
             [weakSelf.uploadStatusArray replaceObjectAtIndex:index withObject:[NSNumber numberWithInt:3]];
         }
         [weakSelf.resultArray addObject:resultDic];
@@ -556,16 +644,53 @@
             weakSelf.navigationItem.leftBarButtonItem.customView.userInteractionEnabled = YES;
             weakSelf.navigationItem.leftBarButtonItem.enabled = YES;
             weakSelf.navigationItem.leftBarButtonItem.customView.alpha = 1;
+            
+            [self dealUploadErrAlert];
         }
     };
-    cell.photo_AudioCompletionBlock = ^(QCloudUploadObjectResult * _Nullable result, NSInteger index, NSString * _Nonnull errorStr) {
+    cell.photo_AudioCompletionBlock = ^(QCloudUploadObjectResult * _Nullable result, NSInteger mediaType, NSInteger index, NSString * _Nonnull errorStr) {
         NSMutableDictionary *resultDic = [NSMutableDictionary dictionary];
         if (result) {
             [weakSelf.uploadStatusArray replaceObjectAtIndex:index withObject:[NSNumber numberWithInt:2]];
+            NSString *key = result.key;
+            //获取self->mediasArray中对应的上传媒体对象
+            for (NSDictionary *mediaDic in self->mediasArray) {
+                if (mediaType == 2) { //音频
+                    if ([[NSString stringWithFormat:@"%@",mediaDic[@"mediaUrl"]] containsString:key]) {
+                        resultDic = [mediaDic mutableCopy];
+                        break;
+                    }
+                }else if (mediaType == 1) { //图片
+                    if ([[NSString stringWithFormat:@"%@",mediaDic[@"originUrl"]] containsString:key]) {
+                        resultDic = [mediaDic mutableCopy];
+                        break;
+                    }
+                }
+            }
+            
+            [weakSelf.resultArray addObject:resultDic];
         }else{
             [weakSelf.uploadStatusArray replaceObjectAtIndex:index withObject:[NSNumber numberWithInt:3]];
+            if (mediaType == 2) { //音频
+                [resultDic setObject:@"" forKey:@"fileName"];
+                [resultDic setObject:@"" forKey:@"mediaUrl"];
+                [resultDic setObject:[NSNumber numberWithInt:2] forKey:@"mediaType"];
+            }else if (mediaType == 1) { //图片
+                [resultDic setObject:@"" forKey:@"hdpiUrl"];
+                [resultDic setObject:@"" forKey:@"mdpiUrl"];
+                [resultDic setObject:@"" forKey:@"originUrl"];
+                [resultDic setObject:[NSNumber numberWithInt:1] forKey:@"mediaType"];
+            }
+            [resultDic setObject:[NSNumber numberWithInt:0] forKey:@"imgHeight"];
+            [resultDic setObject:[NSNumber numberWithInt:0] forKey:@"imgWidth"];
+            [resultDic setObject:@"" forKey:@"mediaId"];
+            [resultDic setObject:@"" forKey:@"id"];
+            [resultDic setObject:@"" forKey:@"url"];
+            [resultDic setObject:[NSNumber numberWithInt:0] forKey:@"type"];
+            
+            [weakSelf.resultArray addObject:resultDic];
         }
-        [weakSelf.resultArray addObject:resultDic];
+        
         if (weakSelf.resultArray.count < weakSelf.uploadArray.count) {
             weakSelf.navigationItem.rightBarButtonItem.customView.userInteractionEnabled = NO;
             weakSelf.navigationItem.rightBarButtonItem.enabled = NO;
@@ -580,8 +705,9 @@
             weakSelf.navigationItem.leftBarButtonItem.customView.userInteractionEnabled = YES;
             weakSelf.navigationItem.leftBarButtonItem.enabled = YES;
             weakSelf.navigationItem.leftBarButtonItem.customView.alpha = 1;
-            [weakSelf.resultArray removeAllObjects];
-            weakSelf.resultArray = [self->mediasArray mutableCopy];
+
+            NSLog(@"weakSelf.resultArray....%@",weakSelf.resultArray);
+            [self dealUploadErrAlert];
         }
     };
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -606,7 +732,13 @@
                                                                              @"keys":keysArray
                                                                              }];
         }else{
-            [cell setCellMsgWithResultVideo:(LFResultVideo *)result];
+            [cell setCellMsgWithResultVideo:(LFResultVideo *)result complete:^(BOOL isSuccess) {
+                if (!isSuccess) {
+                    weakSelf.navigationItem.leftBarButtonItem.customView.userInteractionEnabled = YES;
+                    weakSelf.navigationItem.leftBarButtonItem.enabled = YES;
+                    weakSelf.navigationItem.leftBarButtonItem.customView.alpha = 1;
+                }
+            }];
         }
     }
     [weakSelf.uploadStatusArray replaceObjectAtIndex:indexPath.row withObject:[NSNumber numberWithInt:1]];
@@ -685,6 +817,68 @@
 {
     [self showProgressHUDText:nil isTop:NO needProcess:YES];
 }
+
+- (void)showAlertWithTitle:(NSString *)title {
+    [self showAlertWithTitle:title complete:nil];
+}
+
+- (void)showAlertWithTitle:(NSString *)title complete:(void (^)(void))complete
+{
+    [self showAlertWithTitle:title message:nil complete:complete];
+}
+
+- (void)showAlertWithTitle:(NSString *)title message:(NSString *)message complete:(void (^)(void))complete
+{
+    [self showAlertWithTitle:title cancelTitle:[NSBundle lf_localizedStringForKey:@"_alertViewCancelTitle"] message:message complete:complete];
+}
+
+- (void)showAlertWithTitle:(NSString *)title cancelTitle:(NSString *)cancelTitle message:(NSString *)message complete:(void (^)(void))complete
+{
+    if (@available(iOS 8.0, *)){
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
+        [alertController addAction:[UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            if (complete) {
+                complete();
+            }
+        }]];
+        [self presentViewController:alertController animated:YES completion:nil];
+    } else {
+        
+    }
+}
+
+- (void)showAlertWithTitle:(NSString *)title leftTitle:(NSString *)leftTitle rightTitle:(NSString *)rightTitle message:(NSString *)message leftTouchEvent:(void (^)(void))leftTouchEvent rightTouchEvent:(void (^)(void))rightTouchEvent
+{
+    if (@available(iOS 8.0, *)){
+        UIAlertController* alert = [UIAlertController alertControllerWithTitle:title
+                                                                       message:message
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction* leftAction = [UIAlertAction actionWithTitle:leftTitle style:UIAlertActionStyleDefault
+                                                              handler:^(UIAlertAction * action) {
+                                                                  //响应事件
+                                                                  NSLog(@"action = %@", action);
+                                                                  if (leftTouchEvent) {
+                                                                      leftTouchEvent();
+                                                                  }
+                                                              }];
+        UIAlertAction* rightAction = [UIAlertAction actionWithTitle:rightTitle style:UIAlertActionStyleDefault
+                                                             handler:^(UIAlertAction * action) {
+                                                                 //响应事件
+                                                                 NSLog(@"action = %@", action);
+                                                                 if (rightTouchEvent) {
+                                                                     rightTouchEvent();
+                                                                 }
+                                                             }];
+        
+        [alert addAction:leftAction];
+        [alert addAction:rightAction];
+        [self presentViewController:alert animated:YES completion:nil];
+    } else {
+        
+    }
+}
+
 
 
 @end

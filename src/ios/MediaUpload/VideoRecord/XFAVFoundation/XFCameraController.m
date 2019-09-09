@@ -451,6 +451,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
                         LFResultInfo *info = [LFResultInfo new];
                         result.info = info;
                         uploadVC.uploadArray = [NSMutableArray arrayWithArray:@[result]];
+                        uploadVC.errorAlertType = self.errorAlertType;
                         
                         [uploadVC setBackButtonClickBlock:^{
                             NSLog(@"backButtonClickBlock");
@@ -545,6 +546,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
                             LFResultInfo *info = [LFResultInfo new];
                             result.info = info;
                             uploadVC.uploadArray = [NSMutableArray arrayWithArray:@[result]];
+                            uploadVC.errorAlertType = self.errorAlertType;
                             
                             [uploadVC setBackButtonClickBlock:^{
                                 NSLog(@"backButtonClickBlock");

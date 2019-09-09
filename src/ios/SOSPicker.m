@@ -105,6 +105,11 @@ typedef enum : NSUInteger {
         audioVC.maxRecTime = 60;
     }
     audioVC.isGetCloudRes = YES;
+    if (options[@"errorAlertType"] && [options[@"errorAlertType"] intValue] >0) {
+        audioVC.errorAlertType = [options[@"errorAlertType"] intValue];
+    }else{
+        audioVC.errorAlertType = 1;
+    }
     audioVC.backButtonClickBlock = ^{
 
     };
@@ -196,6 +201,11 @@ typedef enum : NSUInteger {
         cameraController.shootType = 2;
     }else{
         cameraController.shootType = 0;
+    }
+    if (options[@"errorAlertType"] && [options[@"errorAlertType"] intValue] >0) {
+        cameraController.errorAlertType = [options[@"errorAlertType"] intValue];
+    }else{
+        cameraController.errorAlertType = 1;
     }
     
     cameraController.editNaviBgColor = [self colorWithHexString:[options objectForKey:@"editNaviBgColor"]];
@@ -342,6 +352,12 @@ typedef enum : NSUInteger {
     }
     if ([UIDevice currentDevice].systemVersion.floatValue >= 8.0f) {
         imagePicker.syncAlbum = YES; /** 实时同步相册 */
+    }
+    
+    if (options[@"errorAlertType"] && [options[@"errorAlertType"] intValue] >0) {
+        imagePicker.errorAlertType = [options[@"errorAlertType"] intValue];
+    }else{
+        imagePicker.errorAlertType = 1;
     }
     
 //    //底部按钮背景色

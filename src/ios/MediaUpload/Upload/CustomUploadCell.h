@@ -29,7 +29,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef void(^UploadVideoCompletionBlock)(TXPublishResult * __nullable result, NSString *mediaId, NSInteger index, NSString *errorStr);
-typedef void(^UploadPhoto_AudioCompletionBlock)(QCloudUploadObjectResult * __nullable result, NSInteger index, NSString *errorStr);
+typedef void(^UploadPhoto_AudioCompletionBlock)(QCloudUploadObjectResult * __nullable result, NSInteger mediaType, NSInteger index, NSString *errorStr);
 
 @interface CustomUploadCell : UITableViewCell <TXVideoPublishListener>
 {
@@ -88,7 +88,7 @@ typedef void(^UploadPhoto_AudioCompletionBlock)(QCloudUploadObjectResult * __nul
  @param videoSign 上传视频签名
  @param type 类型 0：图片 1：语音 2：视频
  */
--(void)setCellMsgWithResultVideo:(LFResultVideo *)result;
+-(void)setCellMsgWithResultVideo:(LFResultVideo *)result complete:(void (^)(BOOL isSuccess))complete;
 
 /**
  cell高度

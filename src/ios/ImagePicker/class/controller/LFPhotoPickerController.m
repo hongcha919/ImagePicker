@@ -697,6 +697,7 @@
                                 //跳转上传页面
                                 CustomUploadVC *uploadVC = [[CustomUploadVC alloc] init];
                                 uploadVC.uploadArray = [resultArray mutableCopy];
+                                uploadVC.errorAlertType = imagePickerVc.errorAlertType;
                                 
                                 [uploadVC setBackButtonClickBlock:^{
                                     NSLog(@"backButtonClickBlock");

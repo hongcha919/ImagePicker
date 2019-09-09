@@ -59,7 +59,21 @@ ImagePicker.prototype.upload = function(success, fail, options) {
 		orgId: options.orgId ? options.orgId : 1,
 		//test 测试 release 线上
 		environment: options.environment ? options.environment : "test",
-		
+        /*
+            //选择上传出错后具体的容错提示场景 
+                
+            0:默认不给容错提示，只将错误信息根据接口返回，容错提示放到引用插件侧处理
+            1:容错提示在插件侧提示，提示场景如下：
+                1）音频、视频、图片上传一张时失败，提示用户“上传失败，请返回重新上传”，提示框中取消、返回重传按钮
+                2）选择多张图片、多个视频失败， 全部失败：提示用户“上传失败，请返回重新上传”，提示框中取消、返回重传按钮。 部分失败：提示用户“上传N个失败，M个成功”，提示框中上传N张图片、返回重传按钮。
+                
+            2:容错提示在插件侧提示，提示场景如下：
+                1）音频、视频、图片上传一张时失败，提示用户“上传失败，请返回重新上传”，提示框中取消、返回重传按钮
+                2）选择多张图片、多个视频失败，不管是全部失败还是部分失败，提示用户“上传失败，请返回重新上传”，提示框中取消、返回重传按钮。
+                
+        */
+		errorAlertType:options.errorAlertType ? options.errorAlertType : 1,
+               
 		//选择视图的颜色值设置 
 		//底部按钮背景色
 		oKButtonTitleColorNormal: options.oKButtonTitleColorNormal ? options.oKButtonTitleColorNormal : "#1aad19",
@@ -174,7 +188,8 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 		orgId: options.orgId ? options.orgId : 1,
 		//test 测试 release 线上
 		environment: options.environment ? options.environment : "test",
-
+        errorAlertType:options.errorAlertType ? options.errorAlertType : 1,
+               
 		maximumImagesCount: options.maximumImagesCount ? options.maximumImagesCount : 15,
 		customMinZoomScale: options.customMinZoomScale ? options.customMinZoomScale : 1.0,
 		width: options.width ? options.width : 0,
@@ -230,7 +245,8 @@ ImagePicker.prototype.getVideos = function(success, fail, options) {
 		orgId: options.orgId ? options.orgId : 1,
 		//test 测试 release 线上
 		environment: options.environment ? options.environment : "test",
-
+        errorAlertType:options.errorAlertType ? options.errorAlertType : 1,
+               
 		maximumImagesCount: options.maximumImagesCount ? options.maximumImagesCount : 15,
 		customMinZoomScale: options.customMinZoomScale ? options.customMinZoomScale : 1.0,
 		width: options.width ? options.width : 0,
@@ -286,7 +302,8 @@ ImagePicker.prototype.getAudio = function(success, fail, options) {
 		orgId: options.orgId ? options.orgId : 1,
 		//test 测试 release 线上
 		environment: options.environment ? options.environment : "test",
-
+        errorAlertType:options.errorAlertType ? options.errorAlertType : 1,
+               
 		maximumImagesCount: options.maximumImagesCount ? options.maximumImagesCount : 15,
 		customMinZoomScale: options.customMinZoomScale ? options.customMinZoomScale : 1.0,
 		width: options.width ? options.width : 0,
@@ -342,7 +359,8 @@ ImagePicker.prototype.shootPhoto_Video = function(success, fail, options) {
 		orgId: options.orgId ? options.orgId : 1,
 		//test 测试 release 线上
 		environment: options.environment ? options.environment : "test",
-		
+		errorAlertType:options.errorAlertType ? options.errorAlertType : 1,
+               
 		maximumImagesCount: options.maximumImagesCount ? options.maximumImagesCount : 15,
 		customMinZoomScale: options.customMinZoomScale ? options.customMinZoomScale : 1.0,
 		width: options.width ? options.width : 0,
